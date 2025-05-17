@@ -1,0 +1,43 @@
+{
+  "name": "ppe300",
+  "license": "0BSD",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@babel/plugin-transform-class-properties": "^7.27.1",
+    "@react-navigation/native": "^7.1.6",
+    "@react-navigation/native-stack": "^7.3.10",
+    "axios": "^1.8.4",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "expo": "^53.0.0",
+    "expo-network": "^7.1.5",
+    "expo-status-bar": "~2.2.3",
+    "express": "^5.1.0",
+    "firebase": "^11.6.0",
+    "glob": "^9.3.5",
+    "mysql2": "^3.14.0",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.10.0",
+    "react-native-vector-icons": "^10.2.0",
+    "rimraf": "^4.4.1",
+    "sequelize": "^6.37.7",
+    "twilio": "^5.5.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@react-native-community/cli": "latest"
+  },
+  "private": true
+}
