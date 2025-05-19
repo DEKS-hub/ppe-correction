@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -53,7 +53,8 @@ const TransferScreen = ({ navigation }) => {
 
         <TextInput
           style={styles.input}
-          placeholder="Destinataire"
+          placeholder="Numéro du destinataire"
+          keyboardType="phone-pad"
           value={recipient}
           onChangeText={setRecipient}
         />
