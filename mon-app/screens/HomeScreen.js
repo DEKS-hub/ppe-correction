@@ -1,130 +1,338 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-export default function HomeScreen() {
-  const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    // Simulation de chargement
-    setTimeout(() => {
-      // Simuler les données utilisateur
-      const fakeBalance = 125000;
-      const fakeTransactions = [
-        { type: 'transfer', created_at: '2025-05-17T10:30:00', amount: -15000 },
-        { type: 'payment', created_at: '2025-05-15T14:45:00', amount: -5000 },
-        { type: 'transfer', created_at: '2025-05-14T09:20:00', amount: 25000 },
-        { type: 'payment', created_at: '2025-05-12T16:00:00', amount: -10000 },
-      ];
-
-      setBalance(fakeBalance);
-      setTransactions(fakeTransactions);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4B3FF1" />
-        <Text>Chargement...</Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Dépôt et retrait chez tout nos agents DA Transfert</Text>
-
-      <View style={styles.balanceContainer}>
-        <Text style={styles.balanceText}>{balance.toLocaleString()} F</Text>
-        <Image
-          source={require('../assets/qr-code.png')}
-          style={styles.qrCode}
-        />
-        <Text style={styles.scanText}>Scanner</Text>
-      </View>
-
-      <View style={styles.menuContainer}>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('TransferScreen')}
-        >
-          <Ionicons name="swap-horizontal" size={24} color="#333" />
-          <Text>Transfert</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('PaymentsScreen')}
-        >
-          <MaterialIcons name="payment" size={24} color="#333" />
-          <Text>Paiements</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('CreditScreen')}
-        >
-          <FontAwesome name="credit-card" size={24} color="#333" />
-          <Text>Crédit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('BankScreen')}
-        >
-          <Ionicons name="business" size={24} color="#333" />
-          <Text>Banque</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.transactions}>
-        {transactions.map((t, i) => (
-          <View key={i} style={styles.transaction}>
-            <Text>{t.type === 'transfer' ? 'Transfert' : 'Paiement'}</Text>
-            <Text>{new Date(t.created_at).toLocaleString()}</Text>
-            <Text style={{ fontWeight: 'bold', color: t.amount < 0 ? 'red' : 'green' }}>
-              {`${t.amount < 0 ? '' : '+'}${t.amount.toLocaleString()} F`}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
+const COLORS = {
+  primary: '#4B3FF1',
+  white: '#fff',
+  bg: '#F7F8FA',
+  transfer: '#E6E9FF',
+  payment: '#FFE6E6',
+  positive: '#4BB543',
+  negative: '#F15B3F',
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 50 },
-  header: { textAlign: 'center', fontSize: 16, marginBottom: 10 },
+  container: { flex: 1, backgroundColor: COLORS.bg, paddingTop: 50 },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingTop: 48,
+    paddingBottom: 12,
+    backgroundColor: COLORS.bg,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    letterSpacing: 0.5,
+  },
+  headerIconBtn: {
+    padding: 4,
+  },
   balanceContainer: {
     alignItems: 'center',
-    backgroundColor: '#4B3FF1',
-    paddingVertical: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    marginBottom: 18,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  balanceText: { fontSize: 28, color: '#fff', fontWeight: 'bold' },
-  qrCode: { width: 100, height: 100, marginVertical: 10 },
-  scanText: { color: '#fff', fontWeight: 'bold' },
+  balanceLabel: {
+    color: '#fff',
+    fontSize: 15,
+    opacity: 0.8,
+    marginBottom: 4,
+  },
+  balanceText: {
+    fontSize: 34,
+    color: '#fff',
+    fontWeight: 'bold',
+    marginBottom: 8,
+    letterSpacing: 1,
+  },
+  qrCode: {
+    width: 90,
+    height: 90,
+    marginVertical: 10,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scanText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    marginTop: 4,
+    fontSize: 15,
+    letterSpacing: 0.5,
+  },
   menuContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 20,
+    paddingVertical: 22,
+    backgroundColor: '#fff',
+    marginHorizontal: 18,
+    borderRadius: 18,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    marginBottom: 16,
   },
-  menuItem: { alignItems: 'center' },
-  transactions: { paddingHorizontal: 20 },
-  transaction: {
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-    paddingVertical: 10,
+  menuItem: {
+    alignItems: 'center',
+    width: 70,
   },
-  loadingContainer: {
-    flex: 1,
+  menuIconCircle: {
+    backgroundColor: COLORS.transfer,
+    borderRadius: 30,
+    width: 52,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 6,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  menuText: {
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 24,
+    marginBottom: 8,
+    marginTop: 6,
+    letterSpacing: 0.3,
+  },
+  transactions: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  transaction: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  transactionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  transactionIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  transactionType: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 2,
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: '#888',
+  },
+  transactionAmount: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
+  profileModal: {
+    position: 'absolute',
+    top: 100,
+    left: 30,
+    right: 30,
+    backgroundColor: COLORS.white,
+    borderRadius: 18,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 10,
+    zIndex: 100,
+  },
+  closeModalBtn: {
+    marginTop: 10,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: COLORS.transfer,
   },
 });
+
+// Composants secondaires
+const HeaderBar = ({ onProfilePress, onSettingsPress }) => (
+  <View style={styles.headerBar}>
+    <TouchableOpacity onPress={onSettingsPress} style={styles.headerIconBtn}>
+      <Ionicons name="settings-outline" size={26} color={COLORS.primary} />
+    </TouchableOpacity>
+    <Text style={styles.headerTitle}>Accueil</Text>
+    <TouchableOpacity onPress={onProfilePress} style={styles.headerIconBtn}>
+      <Ionicons name="person-circle-outline" size={32} color={COLORS.primary} />
+    </TouchableOpacity>
+  </View>
+);
+
+const UserProfileModal = ({ visible, onClose }) =>
+  visible ? (
+    <View style={styles.profileModal}>
+      <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>Profil utilisateur</Text>
+      <Text>Nom: Jean Dupont</Text>
+      <Text>Email: jean.dupont@email.com</Text>
+      <TouchableOpacity onPress={onClose} style={styles.closeModalBtn}>
+        <Text style={{ color: COLORS.primary, fontWeight: 'bold', marginTop: 16 }}>Fermer</Text>
+      </TouchableOpacity>
+    </View>
+  ) : null;
+
+const SettingsModal = ({ visible, onClose }) =>
+  visible ? (
+    <View style={styles.profileModal}>
+      <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>Paramètres</Text>
+      <Text>Notifications: Activées</Text>
+      <Text>Langue: Français</Text>
+      <TouchableOpacity onPress={onClose} style={styles.closeModalBtn}>
+        <Text style={{ color: COLORS.primary, fontWeight: 'bold', marginTop: 16 }}>Fermer</Text>
+      </TouchableOpacity>
+    </View>
+  ) : null;
+
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit', month: 'short', year: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  });
+};
+
+const TransactionItem = ({ t }) => (
+  <View style={styles.transaction}>
+    <View style={styles.transactionLeft}>
+      <View style={[
+        styles.transactionIcon,
+        { backgroundColor: t.type === 'transfer' ? COLORS.transfer : COLORS.payment }
+      ]}>
+        {t.type === 'transfer'
+          ? <Ionicons name="swap-horizontal" size={20} color={COLORS.primary} />
+          : <MaterialIcons name="payment" size={20} color={COLORS.negative} />}
+      </View>
+      <View>
+        <Text style={styles.transactionType}>
+          {t.type === 'transfer' ? 'Transfert' : 'Paiement'}
+        </Text>
+        <Text style={styles.transactionDate}>
+          {formatDate(t.created_at)}
+        </Text>
+      </View>
+    </View>
+    <Text style={[
+      styles.transactionAmount,
+      { color: t.amount < 0 ? COLORS.negative : COLORS.positive }
+    ]}>
+      {`${t.amount < 0 ? '' : '+'}${t.amount.toLocaleString()} F`}
+    </Text>
+  </View>
+);
+
+// Composant principal
+const HomeScreen = () => {
+  const navigation = useNavigation();
+  const [transactions, setTransactions] = useState([]);
+  const [payment,setPayment] = useState([]);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => {
+    const fakeData = [
+      { id: 1, type: 'transfer', amount: 12000, created_at: '2024-05-12T10:00:00' },
+      { id: 2, type: 'payment', amount: -4500, created_at: '2024-05-11T14:30:00' },
+      { id: 3, type: 'transfer', amount: 12000, created_at: '2024-05-12T10:00:00' },
+      { id: 4, type: 'payment', amount: -4500, created_at: '2024-05-11T14:30:00' },
+      { id: 5, type: 'transfer', amount: 12000, created_at: '2024-05-12T10:00:00' },
+      { id: 6, type: 'payment', amount: -4500, created_at: '2024-05-11T14:30:00' },
+
+    ];
+    setTransactions(fakeData);
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <HeaderBar
+        onProfilePress={() => setShowProfile(true)}
+        onSettingsPress={() => setShowSettings(true)}
+      />
+
+      <ScrollView>
+        <View style={styles.balanceContainer}>
+          <Text style={styles.balanceLabel}>Votre solde</Text>
+          <Text style={styles.balanceText}>12 500 F</Text>
+          <View style={styles.qrCode}>
+            <Ionicons name="qr-code" size={40} color={COLORS.primary} />
+          </View>
+          <Text style={styles.scanText}>Mon code QR</Text>
+        </View>
+
+        <View style={styles.menuContainer}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Transfer')}>
+            <View style={styles.menuIconCircle}>
+              <Ionicons name="swap-horizontal" size={24} color={COLORS.primary} />
+            </View>
+            <Text style={styles.menuText}>Transfert</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Payment')}>
+            <View style={[styles.menuIconCircle, { backgroundColor: COLORS.payment }]}>
+              <MaterialIcons name="payment" size={24} color={COLORS.negative} />
+            </View>
+            <Text style={styles.menuText}>Paiement</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.sectionTitle}>Transactions récentes</Text>
+        <View style={styles.transactions}>
+          {transactions.map(t => (
+            <TransactionItem key={t.id} t={t} />
+          ))}
+        </View>
+      </ScrollView>
+
+      <UserProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
+      <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
+    </View>
+  );
+};
+
+export default HomeScreen;
