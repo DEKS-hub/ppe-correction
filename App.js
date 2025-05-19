@@ -7,7 +7,7 @@ import LoginScreen from './mon-app/screens/LoginScreen';
 import SignUpScreen from './mon-app/screens/RegisterScreen';
 import HomeScreen from './mon-app/screens/HomeScreen';
 import TransferScreen from './mon-app/screens/TransferScreen';
-import BillPaymentScreen from './mon-app/screens/PaymentScreen';
+import PaymentScreen from './mon-app/screens/PaymentScreen';
 import HistoryScreen from './mon-app/screens/HistoryScreen';
 import QRScreen from './mon-app/screens/QRScreen';
 import LoyaltyScreen from './mon-app/screens/LoyaltyScreen';
@@ -24,8 +24,8 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="payment" component={PaymentScreen} />
         <Stack.Screen name="Transfer" component={TransferScreen} />
-        <Stack.Screen name="BillPayment" component={BillPaymentScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />
         <Stack.Screen name="QR" component={QRScreen} />
         <Stack.Screen name="Loyalty" component={LoyaltyScreen} />

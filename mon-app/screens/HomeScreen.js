@@ -272,7 +272,7 @@ const TransactionItem = ({ t }) => (
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
-  const [payment,setPayment] = useState([]);
+  const [payment, setPayment] = useState([]);
   const [showProfile, setShowProfile] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -287,7 +287,9 @@ const HomeScreen = () => {
 
     ];
     setTransactions(fakeData);
+
   }, []);
+
 
   return (
     <View style={styles.container}>
@@ -313,7 +315,7 @@ const HomeScreen = () => {
             </View>
             <Text style={styles.menuText}>Transfert</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Payment')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('payment')}>
             <View style={[styles.menuIconCircle, { backgroundColor: COLORS.payment }]}>
               <MaterialIcons name="payment" size={24} color={COLORS.negative} />
             </View>
