@@ -1,41 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
 
 export default function HomeScreen() {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const navigation = useNavigation();
-  const userId = 1; // ID de l'utilisateur connecté (à remplacer dynamiquement)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    // Simulation de chargement
+    setTimeout(() => {
+      // Simuler les données utilisateur
+      const fakeBalance = 125000;
+      const fakeTransactions = [
+        { type: 'transfer', created_at: '2025-05-17T10:30:00', amount: -15000 },
+        { type: 'payment', created_at: '2025-05-15T14:45:00', amount: -5000 },
+        { type: 'transfer', created_at: '2025-05-14T09:20:00', amount: 25000 },
+        { type: 'payment', created_at: '2025-05-12T16:00:00', amount: -10000 },
+      ];
 
-        // Récupérer le solde de l'utilisateur
-        const balanceRes = await axios.get(`http://localhost:3000/api/users/${userId}`);
-        setBalance(balanceRes.data.balance);
-
-        // Récupérer les transactions de l'utilisateur
-        const transactionsRes = await axios.get(`http://localhost:3000/api/transactions/${userId}`);
-        setTransactions(transactionsRes.data);
-      } catch (err) {
-        console.error(err);
-        setError("Une erreur s'est produite lors du chargement des données.");
-        Alert.alert("Erreur", "Impossible de charger les données. Veuillez réessayer plus tard.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+      setBalance(fakeBalance);
+      setTransactions(fakeTransactions);
+      setLoading(false);
+    }, 1000);
   }, []);
 
   if (loading) {
@@ -52,7 +42,7 @@ export default function HomeScreen() {
       <Text style={styles.header}>Dépôt et retrait chez tout nos agents DA Transfert</Text>
 
       <View style={styles.balanceContainer}>
-        <Text style={styles.balanceText}>{balance.toLocaleString()}F</Text>
+        <Text style={styles.balanceText}>{balance.toLocaleString()} F</Text>
         <Image
           source={require('../assets/qr-code.png')}
           style={styles.qrCode}
@@ -97,7 +87,7 @@ export default function HomeScreen() {
             <Text>{t.type === 'transfer' ? 'Transfert' : 'Paiement'}</Text>
             <Text>{new Date(t.created_at).toLocaleString()}</Text>
             <Text style={{ fontWeight: 'bold', color: t.amount < 0 ? 'red' : 'green' }}>
-              {`${t.amount < 0 ? '' : '+'}${t.amount.toLocaleString()}F`}
+              {`${t.amount < 0 ? '' : '+'}${t.amount.toLocaleString()} F`}
             </Text>
           </View>
         ))}

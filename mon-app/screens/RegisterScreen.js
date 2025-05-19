@@ -1,24 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
-import * as Network from 'expo-network';
-const API_URL = 'http://votre-backend.com';
-
-// En développement avec Expo, utilisez votre adresse IP locale
-// Pour Android: 10.0.2.2 pour l'émulateur Android
-// Pour iOS: localhost fonctionne
-const getApiUrl = async () => {
-  if (__DEV__) {
-    const ip = await Network.getIpAddressAsync();
-    if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:3000';
-    } else {
-      return 'http://localhost:3000';
-    }
-  }
-  return 'https://votre-api-production.com'; // URL de production
-};
 
 export default function RegisterScreen() {
   const navigation = useNavigation();
@@ -29,15 +11,8 @@ export default function RegisterScreen() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone) => {
-    const phoneRegex = /^[0-9]{8,}$/;
-    return phoneRegex.test(phone);
-  };
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone) => /^[0-9]{8,}$/.test(phone);
 
   const validateFields = () => {
     if (!fullName.trim()) {
@@ -59,53 +34,27 @@ export default function RegisterScreen() {
     return true;
   };
 
-  const handleRegister = async () => {
-    try {
-      setError(null);
-      
-      if (!validateFields()) {
-        return;
-      }
+  const handleRegister = () => {
+    setError(null);
 
-      setIsLoading(true);
-      const apiUrl = await getApiUrl();
-      console.log('Tentative d\'inscription sur:', apiUrl);
-      const response = await axios.post(`${API_URL}/api/register`,  {
-        name: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        password: password
-      });
+    if (!validateFields()) return;
 
-      if (response.data) {
-        Alert.alert(
-          'Succès',
-          'Votre compte a été créé avec succès !',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('Login')
-            }
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
-      let errorMessage = 'Une erreur est survenue lors de l\'inscription';
+    setIsLoading(true);
 
-      if (error.response) {
-        // Erreur du serveur avec réponse
-        errorMessage = error.response.data?.message || 'Erreur du serveur';
-      } else if (error.request) {
-        // Pas de réponse du serveur
-        errorMessage = 'Impossible de joindre le serveur. Vérifiez votre connexion internet.';
-      }
-
-      setError(errorMessage);
-      Alert.alert('Erreur', errorMessage);
-    } finally {
+    // Simulation du délai d'inscription
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      Alert.alert(
+        'Succès',
+        'Votre compte a été créé avec succès !',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login')
+          }
+        ]
+      );
+    }, 1500);
   };
 
   return (

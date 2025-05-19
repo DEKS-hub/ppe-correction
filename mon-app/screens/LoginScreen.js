@@ -4,11 +4,11 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const [identifier, setIdentifier] = useState(''); // Peut être un email ou un numéro
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!identifier || !password) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
@@ -16,29 +16,22 @@ export default function LoginScreen() {
 
     setLoading(true);
 
-    try {
-      const response = await fetch('http://localhost:3000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
-      });
+    // Simulation des identifiants
+    const fakeUser = {
+      identifier: 'user@example.com',
+      password: '123456',
+      name: 'Utilisateur Test'
+    };
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Connexion réussie
-        console.log('Connexion réussie:', data);
-        navigation.navigate('Home', { user: data });
+    setTimeout(() => {
+      if (identifier === fakeUser.identifier && password === fakeUser.password) {
+        console.log('Connexion simulée réussie');
+        navigation.navigate('Home', { user: fakeUser });
       } else {
-        // Erreur de connexion
-        Alert.alert('Erreur', data.message || 'Identifiant ou mot de passe incorrect.');
+        Alert.alert('Erreur', 'Identifiant ou mot de passe incorrect.');
       }
-    } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue. Veuillez réessayer.');
-    } finally {
       setLoading(false);
-    }
+    }, 1000);
   };
 
   return (

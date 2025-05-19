@@ -8,7 +8,7 @@ export default function ForgotPasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleResetPassword = async () => {
+  const handleResetPassword = () => {
     if (!phone || !newPassword) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
@@ -16,28 +16,13 @@ export default function ForgotPasswordScreen() {
 
     setLoading(true);
 
-    try {
-      const response = await fetch('http://192.168.1.104:3000/api/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, newPassword }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert('Succès', data.message, [
-          { text: 'OK', onPress: () => navigation.navigate('Login') },
-        ]);
-      } else {
-        Alert.alert('Erreur', data.message || 'Impossible de réinitialiser le mot de passe.');
-      }
-    } catch (error) {
-      console.error('Erreur:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue.');
-    } finally {
+    // Simuler une attente réseau
+    setTimeout(() => {
       setLoading(false);
-    }
+      Alert.alert('Succès', 'Votre mot de passe a été réinitialisé.', [
+        { text: 'OK', onPress: () => navigation.navigate('Login') },
+      ]);
+    }, 1500);
   };
 
   return (
@@ -82,4 +67,3 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
-
