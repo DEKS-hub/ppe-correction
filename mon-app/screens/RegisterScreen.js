@@ -1,171 +1,289 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import axios from 'axios';
+import Feather from 'react-native-vector-icons/Feather';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Fontisto from 'react-native-vector-icons/Fontisto';
+import Error from 'react-native-vector-icons/MaterialIcons';
+import { RadioButton } from 'react-native-paper';
 
-export default function RegisterScreen() {
-  const navigation = useNavigation();
-  const [fullName, setFullName] = useState('');
+export default function RegisterScreen({ navigation }) {
+  const [name, setName] = useState('');
+  const [nameVerify, setNameVerify] = useState(false);
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [emailVerify, setEmailVerify] = useState(false);
+  const [mobile, setMobile] = useState('');
+  const [mobileVerify, setMobileVerify] = useState(false);
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [passwordVerify, setPasswordVerify] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [userType, setUserType] = useState('User');
+  const [secretText, setSecretText] = useState('');
 
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone) => /^[0-9]{8,}$/.test(phone);
+  const handleRegister = async () => {
+    if (!(nameVerify && emailVerify && mobileVerify && passwordVerify)) {
+      Alert.alert('Erreur', 'Veuillez remplir correctement tous les champs.');
+      return;
+    }
+    if (userType === 'Admin' && secretText !== 'Text1243') {
+      Alert.alert('Erreur', "Texte secret invalide pour l'administrateur.");
+      return;
+    }
 
-  const validateFields = () => {
-    if (!fullName.trim()) {
-      setError('Le nom complet est requis');
-      return false;
+    try {
+      const response = await axios.post('http://192.168.1.122:3000/register', {
+        name,
+        email,
+        mobile,
+        password,
+        user_type: userType,
+      });
+
+      if (response.data.status === 'ok' || response.data.message === 'Compte créé avec succès') {
+        Alert.alert('Succès', 'Inscription réussie.', [
+          { text: 'OK', onPress: () => navigation.navigate('Login') },
+        ]);
+      } else {
+        Alert.alert('Erreur', response.data.message || "Erreur lors de l'inscription.");
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de se connecter au serveur.');
+      console.error(error);
     }
-    if (!email.trim() || !validateEmail(email.trim())) {
-      setError('Veuillez entrer une adresse email valide');
-      return false;
-    }
-    if (!phone.trim() || !validatePhone(phone.trim())) {
-      setError('Veuillez entrer un numéro de téléphone valide (minimum 8 chiffres)');
-      return false;
-    }
-    if (!password || password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
-      return false;
-    }
-    return true;
   };
 
-  const handleRegister = () => {
-    setError(null);
+  const handleName = (text) => {
+    setName(text);
+    setNameVerify(text.trim().length > 1);
+  };
 
-    if (!validateFields()) return;
+  const handleEmail = (text) => {
+    setEmail(text);
+    setEmailVerify(/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(text));
+  };
 
-    setIsLoading(true);
+  const handleMobile = (text) => {
+    setMobile(text);
+    setMobileVerify(/^[6-9][0-9]{9}$/.test(text));
+  };
 
-    // Simulation du délai d'inscription
-    setTimeout(() => {
-      setIsLoading(false);
-      Alert.alert(
-        'Succès',
-        'Votre compte a été créé avec succès !',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login')
-          }
-        ]
-      );
-    }, 1500);
+  const handlePassword = (text) => {
+    setPassword(text);
+    setPasswordVerify(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(text));
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Créer un compte</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : null}
+      style={styles.wrapper}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>Créer un compte</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nom complet"
-        value={fullName}
-        onChangeText={setFullName}
-        autoCapitalize="words"
-      />
+        <View style={styles.radioButtonDiv}>
+          <Text style={styles.radioButtonTitle}>S'inscrire comme</Text>
+          <View style={styles.radioButtonInnerDiv}>
+            <Text>User</Text>
+            <RadioButton
+              value="User"
+              status={userType === 'User' ? 'checked' : 'unchecked'}
+              onPress={() => setUserType('User')}
+            />
+          </View>
+          <View style={styles.radioButtonInnerDiv}>
+            <Text>Admin</Text>
+            <RadioButton
+              value="Admin"
+              status={userType === 'Admin' ? 'checked' : 'unchecked'}
+              onPress={() => setUserType('Admin')}
+            />
+          </View>
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Téléphone"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Mot de passe"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoCapitalize="none"
-      />
-
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <TouchableOpacity 
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleRegister}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Créer le compte</Text>
+        {userType === 'Admin' && (
+          <View style={styles.action}>
+            <FontAwesome name="user-o" color="#420475" size={20} />
+            <TextInput
+              placeholder="Texte secret"
+              style={styles.input}
+              onChangeText={setSecretText}
+              value={secretText}
+            />
+          </View>
         )}
-      </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.linkContainer}
-        onPress={() => navigation.navigate('Login')}
-      >
-        <Text style={styles.link}>Déjà un compte ? Connexion</Text>
-      </TouchableOpacity>
-    </View>
+        <View style={styles.action}>
+          <FontAwesome name="user-o" color="#420475" size={20} />
+          <TextInput
+            placeholder="Nom complet"
+            style={styles.input}
+            onChangeText={handleName}
+            value={name}
+          />
+          {name.length > 0 && (nameVerify ? (
+            <Feather name="check-circle" color="green" size={20} />
+          ) : (
+            <Error name="error" color="red" size={20} />
+          ))}
+        </View>
+        {name.length > 0 && !nameVerify && (
+          <Text style={styles.errorText}>Le nom doit contenir plus d'un caractère.</Text>
+        )}
+
+        <View style={styles.action}>
+          <Fontisto name="email" color="#420475" size={20} />
+          <TextInput
+            placeholder="Email"
+            style={styles.input}
+            onChangeText={handleEmail}
+            value={email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          {email.length > 0 && (emailVerify ? (
+            <Feather name="check-circle" color="green" size={20} />
+          ) : (
+            <Error name="error" color="red" size={20} />
+          ))}
+        </View>
+        {email.length > 0 && !emailVerify && (
+          <Text style={styles.errorText}>Entrez une adresse email valide.</Text>
+        )}
+
+        <View style={styles.action}>
+          <FontAwesome name="mobile" color="#420475" size={30} />
+          <TextInput
+            placeholder="Numéro de téléphone"
+            style={styles.input}
+            onChangeText={handleMobile}
+            value={mobile}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
+          {mobile.length > 0 && (mobileVerify ? (
+            <Feather name="check-circle" color="green" size={20} />
+          ) : (
+            <Error name="error" color="red" size={20} />
+          ))}
+        </View>
+        {mobile.length > 0 && !mobileVerify && (
+          <Text style={styles.errorText}>
+            Le numéro doit commencer par 6-9 et contenir 10 chiffres.
+          </Text>
+        )}
+
+        <View style={styles.action}>
+          <FontAwesome name="lock" color="#420475" size={20} />
+          <TextInput
+            placeholder="Mot de passe"
+            style={styles.input}
+            onChangeText={handlePassword}
+            value={password}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            {password.length > 0 && (!showPassword ? (
+              <Feather name="eye-off" color={passwordVerify ? 'green' : 'red'} size={20} />
+            ) : (
+              <Feather name="eye" color={passwordVerify ? 'green' : 'red'} size={20} />
+            ))}
+          </TouchableOpacity>
+        </View>
+        {password.length > 0 && !passwordVerify && (
+          <Text style={styles.errorText}>
+            Mot de passe avec majuscule, minuscule, chiffre, et 6+ caractères.
+          </Text>
+        )}
+
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
+          <Text style={styles.buttonText}>S'inscrire</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.link}>Déjà inscrit ? Connectez-vous ici</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
+    backgroundColor: '#F2F6FF',
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: 24,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 40,
+    color: '#333',
     textAlign: 'center',
   },
-  input: {
-    backgroundColor: '#f0f0f0',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
+  radioButtonDiv: {
+    marginBottom: 20,
+  },
+  radioButtonInnerDiv: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  radioButtonTitle: {
+    fontWeight: '600',
+    marginBottom: 5,
     fontSize: 16,
   },
-  button: {
-    backgroundColor: '#1E90FF',
-    padding: 15,
-    borderRadius: 8,
+  action: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 12,
   },
-  buttonDisabled: {
-    backgroundColor: '#cccccc',
+  input: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginLeft: 10,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 38,
+  },
+  button: {
+    backgroundColor: '#0066CC',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+    elevation: 3,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  linkContainer: {
-    marginTop: 20,
-    alignItems: 'center',
+    fontSize: 18,
+    fontWeight: '600',
   },
   link: {
-    color: '#1E90FF',
+    color: '#0066CC',
     fontSize: 16,
-  },
-  error: {
-    color: 'red',
-    marginBottom: 15,
     textAlign: 'center',
   },
 });
