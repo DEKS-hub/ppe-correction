@@ -49,12 +49,12 @@ export default function RegisterScreen({ navigation }) {
         user_type: userType,
       });
 
-      if (response.data.status === 'ok' || response.data.message === 'Compte créé avec succès') {
+      if (response.data.status === 'success' || response.data.message === 'Compte créé avec succès') {
         Alert.alert('Succès', 'Inscription réussie.', [
           { text: 'OK', onPress: () => navigation.navigate('Login') },
         ]);
       } else {
-        Alert.alert('Erreur', response.data.message || "Erreur lors de l'inscription.");
+        Alert.alert('Erreur', response.data.message || "Compte créé avec succès.");
       }
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de se connecter au serveur.');

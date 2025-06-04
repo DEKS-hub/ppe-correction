@@ -43,13 +43,12 @@ app.post("/register", async (req, res) => {
   try {
     console.log("preparation pour l insertion");
     
-    // Hash password before storing
-    const hashedPassword = await bcrypt.hash(password, 10);
+   
 
     // 5. Insérer l'utilisateur en base
     const [result] = await db.query(
       "INSERT INTO users (name, email, mobile, password, user_type) VALUES (?, ?, ?, ?, ?)",
-      [name, email, mobile, hashedPassword, user_type]
+      [name, email, mobile, password, user_type]
     );
     console.log(result);
 
@@ -79,6 +78,9 @@ app.post("/register", async (req, res) => {
 // Connexion
 app.post("/login-user", async (req, res) => {
   const { email, password } = req.body;
+  
+
+  console.log(req.body);
 
   try {
     const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
@@ -87,17 +89,21 @@ app.post("/login-user", async (req, res) => {
     }
 
     const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+
+    // Comparaison directe du mot de passe sans cryptage
+    if (password !== user.password) {
       return res.send({ data: "Mot de passe incorrect" });
     }
+    console.log("preparation pour la connexion");
 
     const token = jwt.sign({ email: user.email }, JWT_SECRET);
     res.send({ status: "ok", data: token, userType: user.userType });
   } catch (error) {
-    res.send({ error });
+    console.error("Erreur lors de la connexion :", error);
+    res.send({ error: "Erreur serveur" });
   }
 });
+
 
 // Récupération des infos utilisateur via token
 app.post("/userdata", async (req, res) => {

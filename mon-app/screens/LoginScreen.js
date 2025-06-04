@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -8,7 +9,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!identifier || !password) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
@@ -16,22 +17,30 @@ export default function LoginScreen() {
 
     setLoading(true);
 
-    // Simulation des identifiants
-    const fakeUser = {
-      identifier: 'user@example.com',
-      password: '123456',
-      name: 'Utilisateur Test'
-    };
+    try {
+      const response = await fetch('http://192.168.1.122:3000/login-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier, password }),
+      });
 
-    setTimeout(() => {
-      if (identifier === fakeUser.identifier && password === fakeUser.password) {
-        console.log('Connexion simulée réussie');
-        navigation.navigate('Home', { user: fakeUser });
+      const result = await response.json();
+
+      if (result.status === 'ok') {
+        await AsyncStorage.setItem('token', result.data);
+      if (result.userType) {
+          await AsyncStorage.setItem('userType', result.userType);
+        }        
+        navigation.navigate('Home');
       } else {
-        Alert.alert('Erreur', 'Identifiant ou mot de passe incorrect.');
+        Alert.alert('Erreur', result.data || 'Identifiant ou mot de passe incorrect.');
       }
-      setLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Erreur lors de la connexion:', error);
+      Alert.alert('Erreur', 'Une erreur est survenue. Veuillez réessayer.');
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -40,12 +49,10 @@ export default function LoginScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Email ou numéro de téléphone"
-        keyboardType="default"
+        placeholder="Email"
+        keyboardType="email-address"
         value={identifier}
         onChangeText={setIdentifier}
-        accessible
-        accessibilityLabel="Champ pour entrer l'email ou le numéro de téléphone"
       />
 
       <TextInput
@@ -54,27 +61,16 @@ export default function LoginScreen() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        accessible
-        accessibilityLabel="Champ pour entrer le mot de passe"
       />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-        disabled={loading}
-        accessible
-        accessibilityLabel="Bouton pour se connecter"
-      >
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? 'Connexion...' : 'Connexion'}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => navigation.navigate('SignUp')}
-        accessible
-        accessibilityLabel="Lien pour créer un compte"
-      >
+      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
         <Text style={styles.link}>Créer un compte</Text>
       </TouchableOpacity>
+
       <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
         <Text style={styles.link}>Mot de passe oublié ?</Text>
       </TouchableOpacity>
@@ -86,11 +82,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 30, textAlign: 'center' },
   input: {
-    backgroundColor: '#f0f0f0', padding: 15, borderRadius: 8, marginBottom: 15, fontSize: 16,
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
   },
   button: {
-    backgroundColor: '#1E90FF', padding: 15, borderRadius: 8, alignItems: 'center',
+    backgroundColor: '#0066cc',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  link: { marginTop: 20, color: '#1E90FF', textAlign: 'center' },
+  buttonText: { color: '#fff', fontWeight: 'bold' },
+  link: { color: '#0066cc', textAlign: 'center', marginTop: 10 },
 });
