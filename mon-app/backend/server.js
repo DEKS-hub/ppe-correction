@@ -28,23 +28,53 @@ app.get('/', (req, res) => {
 
 // Enregistrement
 app.post("/register", async (req, res) => {
-  const { name, email, mobile, password, userType } = req.body;
+  const { name, email, mobile, password, user_type } = req.body;
+  console.log(req.body);
+  // 1. Vérification des champs obligatoires
+  if (!name || !email || !mobile || !password || !user_type) {
+    return res.status(400).send({ status: "error", data: "Tous les champs sont requis" });
+  }
+
+  // 2. Vérification du type d'utilisateur (ENUM)
+  if (!["User", "Admin"].includes(user_type)) {
+    return res.status(400).send({ status: "error", data: "Type d'utilisateur invalide" });
+  }
 
   try {
-    const [existing] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
-    if (existing.length > 0) {
-      return res.send({ data: "User already exists!!" });
-    }
-
+    console.log("preparation pour l insertion");
+    
+    // Hash password before storing
     const hashedPassword = await bcrypt.hash(password, 10);
-    await db.query("INSERT INTO users (name, email, mobile, password, userType) VALUES (?, ?, ?, ?, ?)",
-      [name, email, mobile, hashedPassword, userType]);
 
-    res.send({ status: "ok", data: "User Created" });
+    // 5. Insérer l'utilisateur en base
+    const [result] = await db.query(
+      "INSERT INTO users (name, email, mobile, password, user_type) VALUES (?, ?, ?, ?, ?)",
+      [name, email, mobile, hashedPassword, user_type]
+    );
+    console.log(result);
+
+    // 6. Réponse succès
+    return res.status(201).send({
+      status: "success",
+      data: {
+        id: result.insertId,
+        name,
+        email,
+        mobile,
+        user_type
+      }
+    });
+
   } catch (error) {
-    res.send({ status: "error", data: error });
+    console.error("Erreur d'enregistrement :", error);
+    return res.status(500).send({
+      status: "error", 
+      data: "Une erreur est survenue lors de l'enregistrement"
+    });
   }
 });
+
+
 
 // Connexion
 app.post("/login-user", async (req, res) => {
