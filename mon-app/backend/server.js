@@ -1,12 +1,12 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
+const QRCode = require('qrcode');
 const app = express();
 const port = 3000;
 const JWT_SECRET = "hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jdsds039[]]pou89ywe";
+const { v4: uuidv4 } = require('uuid');
 
 app.use(express.json());
 app.use(cors());
@@ -26,10 +26,12 @@ app.get('/', (req, res) => {
   res.send({ status: "Started" });
 });
 
+
 // Enregistrement
 app.post("/register", async (req, res) => {
   const { name, email, mobile, password, user_type } = req.body;
   console.log(req.body);
+
   // 1. Vérification des champs obligatoires
   if (!name || !email || !mobile || !password || !user_type) {
     return res.status(400).send({ status: "error", data: "Tous les champs sont requis" });
@@ -41,18 +43,19 @@ app.post("/register", async (req, res) => {
   }
 
   try {
-    console.log("preparation pour l insertion");
-    
-   
+    console.log("Préparation pour l'insertion");
 
-    // 5. Insérer l'utilisateur en base
+    // Générer un identifiant unique pour le QR code
+    const qrcode = uuidv4();
+
+    // 3. Insérer l'utilisateur en base, avec le champ qrcode
     const [result] = await db.query(
-      "INSERT INTO users (name, email, mobile, password, user_type) VALUES (?, ?, ?, ?, ?)",
-      [name, email, mobile, password, user_type]
+      "INSERT INTO users (name, email, mobile, password, user_type, qrcode) VALUES (?, ?, ?, ?, ?, ?)",
+      [name, email, mobile, password, user_type, qrcode]
     );
-    console.log(result);
+    console.log("Utilisateur créé :", result);
 
-    // 6. Réponse succès
+    // 4. Réponse succès (on renvoie aussi la valeur qrcode)
     return res.status(201).send({
       status: "success",
       data: {
@@ -60,14 +63,15 @@ app.post("/register", async (req, res) => {
         name,
         email,
         mobile,
-        user_type
+        user_type,
+        qrcode
       }
     });
 
   } catch (error) {
     console.error("Erreur d'enregistrement :", error);
     return res.status(500).send({
-      status: "error", 
+      status: "error",
       data: "Une erreur est survenue lors de l'enregistrement"
     });
   }
@@ -155,6 +159,28 @@ app.post("/delete-user", async (req, res) => {
     res.send({ error });
   }
 });
+
+// recuperer le code QR
+app.get('/api/qrcode', async (req, res) => {
+  const id = req.query.id;
+  console.log("ID reçu pour QR code :", id);
+  if (!id) return res.status(400).json({ error: 'id manquant' });
+
+  try {
+    const [rows] = await db.execute(
+      'SELECT qrcode FROM users WHERE id = ?', 
+      [id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'QR code non trouvé' });
+
+    res.json({ qrCode: rows[0].qrcode });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
 
 // Démarrage serveur
 app.listen(port, '0.0.0.0', () => {
