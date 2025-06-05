@@ -347,7 +347,7 @@ const HomeScreen = () => {
           ) : qrCodeError ? (
             <Text style={{ color: 'red' }}>{qrCodeError}</Text>
           ) : (
-            <QRCode value={qrCode} size={80} />
+            <QRCode value={qrCode} size={160} />
           )}
         </View>
 
