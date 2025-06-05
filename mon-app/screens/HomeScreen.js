@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native'; // <--- AJOUT DE 'Image' ICI
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import QRCode from 'react-native-qrcode-svg';
 
 const COLORS = {
   primary: '#4B3FF1',
@@ -284,7 +285,9 @@ const HomeScreen = () => {
   useEffect(() => {
     setIsLoadingQrCode(true);
     setQrCodeError(null);
-    fetch("http://192.168.1.122:3000/api/qrcode?id=95cf686b-c199-4379-85fc-997b8bd25bb0") // Assurez-vous que cet ID est dynamique si nécessaire
+    // Exemple avec ID utilisateur = 6
+    fetch("http://192.168.1.122:3000/api/qrcode?id=6")
+ // Assurez-vous que cet ID est dynamique si nécessaire
       .then(res => {
         console.log('Statut de la réponse API QR Code:', res.status);
         if (!res.ok) {
@@ -338,23 +341,16 @@ const HomeScreen = () => {
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceLabel}>Votre solde</Text>
           <Text style={styles.balanceText}>12 500 F</Text>
-          <View style={styles.qrCode}>
-            {isLoadingQrCode ? (
-              <Text style={{fontSize: 10, color: COLORS.primary}}>Chargement...</Text> // Ou un ActivityIndicator
-            ) : qrCodeError ? (
-              <MaterialIcons name="error-outline" size={40} color={COLORS.negative} />
-            ) : qrCode ? (
-              // L'image du QR Code s'affichera ici si qrCode est une chaîne Data URL valide
-              <Image 
-                source={{ uri: qrCode }} 
-                style={{ width: 80, height: 80 }} // Style de l'image QR Code elle-même
-                resizeMode="contain" // Assure que tout le QR code est visible
-              />
-            ) : (
-              // Icône par défaut si qrCode n'est pas disponible après le chargement (et pas d'erreur)
-              <Ionicons name="qr-code" size={40} color={COLORS.primary} />
-            )}
-          </View>
+          <View style={{ alignItems: 'center' }}>
+          {isLoadingQrCode ? (
+            <Text>Chargement du QR Code...</Text>
+          ) : qrCodeError ? (
+            <Text style={{ color: 'red' }}>{qrCodeError}</Text>
+          ) : (
+            <QRCode value={qrCode} size={80} />
+          )}
+        </View>
+
           {qrCodeError && <Text style={{fontSize: 10, color: COLORS.white, marginTop: 4}}>{qrCodeError}</Text>}
           <Text style={styles.scanText}>Mon code QR</Text>
         </View>

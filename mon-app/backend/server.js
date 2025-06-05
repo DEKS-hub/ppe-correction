@@ -160,20 +160,24 @@ app.post("/delete-user", async (req, res) => {
   }
 });
 
-// recuperer le code QR
+// GET /api/qrcode?id=6
 app.get('/api/qrcode', async (req, res) => {
   const id = req.query.id;
-  console.log("ID reçu pour QR code :", id);
-  if (!id) return res.status(400).json({ error: 'id manquant' });
+  console.log("ID utilisateur reçu :", id);
+  if (!id) return res.status(400).json({ error: 'ID utilisateur manquant' });
 
   try {
     const [rows] = await db.execute(
-      'SELECT qrcode FROM users WHERE id = ?', 
+      'SELECT qrcode FROM users WHERE id = ?',
       [id]
     );
-    if (rows.length === 0) return res.status(404).json({ error: 'QR code non trouvé' });
+    console.log("Résultat de la requête :");
 
-    res.json({ qrCode: rows[0].qrcode });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé ou pas de QR code' });
+    }
+
+    res.json({ qrCode: rows[0].qrcode }); // Assure-toi que `qrcode` contient soit : un texte, soit une image base64
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
