@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+ 
 import {
   View,
   Text,
@@ -16,6 +17,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Error from 'react-native-vector-icons/MaterialIcons';
 import { RadioButton } from 'react-native-paper';
+import IP_ADDRESS from 'ipConfig';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -41,7 +43,7 @@ export default function RegisterScreen({ navigation }) {
     }
 
     try {
-      const response = await axios.post('http://192.168.1.122:3000/register', {
+      const response = await axios.post('IP_ADDRESS/register', {
         name,
         email,
         mobile,

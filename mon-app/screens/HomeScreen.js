@@ -4,6 +4,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import IP_ADDRESS from 'ipConfig';
 const COLORS = {
   primary: '#4B3FF1',
   white: '#fff',
@@ -289,7 +290,7 @@ const HomeScreen = () => {
     setIsLoadingQrCode(true);
     setQrCodeError(null);
     // Exemple avec ID utilisateur = 6
-    fetch("http://192.168.1.122:3000/api/qrcode?id=${userId}")
+    fetch("IP_ADDRESS/api/qrcode?id=${userId}")
  // Assurez-vous que cet ID est dynamique si nécessaire
       .then(res => {
         console.log('Statut de la réponse API QR Code:', res.status);
@@ -326,7 +327,7 @@ const HomeScreen = () => {
     console.log("l historique commence deja bien");  // Récupérer l'ID utilisateur stocké
     if (!userId) return;
 
-    fetch(`http://192.168.1.122:3000/api/transactions?user_id=${userId}`)
+    fetch(`IP_ADDRESS/api/transactions?user_id=${userId}`)
       .then(res => res.json())
       .then(data => setTransactions(data))  // Met à jour le state avec les transactions
       .catch(err => console.error(err));
@@ -340,7 +341,7 @@ useEffect(() => {
     const userId = await AsyncStorage.getItem('userId');
     if (!userId) return;
 
-    fetch(`http://192.168.1.122:3000/api/solde/${userId}`)
+    fetch(`IP_ADDRESS/api/solde/${userId}`)
       .then(res => res.json())
       .then(data => {
         setSolde(data.solde);
