@@ -183,6 +183,42 @@ app.get('/api/qrcode', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+app.get('/api/transactions', async (req, res) => {
+  const userId = req.query.user_id;
+  if (!userId) return res.status(400).json({ error: 'ID utilisateur requis' });
+  console.log("ID utilisateur pour les transactions :", userId);
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM transactions 
+       WHERE sender_id = ? OR receiver_id = ? 
+       ORDER BY created_at DESC`,
+      [userId, userId]
+    );
+    console.log("Transactions récupérées pour l'utilisateur ID :", userId);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+app.get('/api/solde/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const [rows] = await db.execute('SELECT solde FROM users WHERE id = ?', [userId]);
+    console.log("Solde récupéré pour l'utilisateur ID :", userId);
+    if (rows.length > 0) {
+      res.json({ solde: rows[0].solde });
+    } else {
+      res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+
 
 
 

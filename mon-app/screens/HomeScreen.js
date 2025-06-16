@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'rea
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const COLORS = {
   primary: '#4B3FF1',
   white: '#fff',
@@ -207,6 +207,35 @@ const HeaderBar = ({ onProfilePress, onSettingsPress }) => (
     </TouchableOpacity>
   </View>
 );
+const TransactionItem = ({ t }) => (
+  <View style={styles.transaction}>
+    <View style={styles.transactionLeft}>
+      <View style={[
+        styles.transactionIcon,
+        { backgroundColor: t.type === 'transfer' ? COLORS.transfer : COLORS.payment }
+      ]}>
+        {t.type === 'transfer'
+          ? <Ionicons name="swap-horizontal" size={20} color={COLORS.primary} />
+          : <MaterialIcons name="payment" size={20} color={COLORS.negative} />}
+      </View>
+      <View>
+        <Text style={styles.transactionType}>
+          {t.type === 'transfer' ? 'Transfert' : 'Paiement'}
+        </Text>
+        <Text style={styles.transactionDate}>
+          {formatDate(t.created_at)}
+        </Text>
+      </View>
+    </View>
+    <Text style={[
+      styles.transactionAmount,
+      { color: t.amount < 0 ? COLORS.negative : COLORS.positive }
+    ]}>
+      {`${t.amount < 0 ? '' : '+'}${t.amount.toLocaleString()} F`}
+    </Text>
+  </View>
+);
+
 
 const UserProfileModal = ({ visible, onClose }) =>
   visible ? (
@@ -240,34 +269,6 @@ const formatDate = (dateStr) => {
   });
 };
 
-const TransactionItem = ({ t }) => (
-  <View style={styles.transaction}>
-    <View style={styles.transactionLeft}>
-      <View style={[
-        styles.transactionIcon,
-        { backgroundColor: t.type === 'transfer' ? COLORS.transfer : COLORS.payment }
-      ]}>
-        {t.type === 'transfer'
-          ? <Ionicons name="swap-horizontal" size={20} color={COLORS.primary} />
-          : <MaterialIcons name="payment" size={20} color={COLORS.negative} />}
-      </View>
-      <View>
-        <Text style={styles.transactionType}>
-          {t.type === 'transfer' ? 'Transfert' : 'Paiement'}
-        </Text>
-        <Text style={styles.transactionDate}>
-          {formatDate(t.created_at)}
-        </Text>
-      </View>
-    </View>
-    <Text style={[
-      styles.transactionAmount,
-      { color: t.amount < 0 ? COLORS.negative : COLORS.positive }
-    ]}>
-      {`${t.amount < 0 ? '' : '+'}${t.amount.toLocaleString()} F`}
-    </Text>
-  </View>
-);
 
 // Composant principal
 const HomeScreen = () => {
@@ -279,6 +280,8 @@ const HomeScreen = () => {
   const [qrCode, setQrCode] = useState(null); // État pour stocker la chaîne Base64 du QR Code
   const [isLoadingQrCode, setIsLoadingQrCode] = useState(true); // Pour l'état de chargement du QR Code
   const [qrCodeError, setQrCodeError] = useState(null); // Pour les erreurs de chargement du QR Code
+  const [solde, setSolde] = useState(null);
+
 
 
   // Récupération du QR Code
@@ -286,7 +289,7 @@ const HomeScreen = () => {
     setIsLoadingQrCode(true);
     setQrCodeError(null);
     // Exemple avec ID utilisateur = 6
-    fetch("http://192.168.1.122:3000/api/qrcode?id=6")
+    fetch("http://192.168.1.122:3000/api/qrcode?id=${userId}")
  // Assurez-vous que cet ID est dynamique si nécessaire
       .then(res => {
         console.log('Statut de la réponse API QR Code:', res.status);
@@ -316,19 +319,41 @@ const HomeScreen = () => {
         setIsLoadingQrCode(false);
       });
   }, []);
-  
-  // Données factices pour les transactions
+  // donnees pour les transactions
   useEffect(() => {
-    const fakeData = [
-      { id: 1, type: 'transfer', amount: 12000, created_at: '2024-05-12T10:00:00' },
-      { id: 2, type: 'payment', amount: -4500, created_at: '2024-05-11T14:30:00' },
-      { id: 3, type: 'transfer', amount: 12000, created_at: '2024-05-12T10:00:00' },
-      { id: 4, type: 'payment', amount: -4500, created_at: '2024-05-11T14:30:00' },
-      { id: 5, type: 'transfer', amount: 12000, created_at: '2024-05-12T10:00:00' },
-      { id: 6, type: 'payment', amount: -4500, created_at: '2024-05-11T14:30:00' },
-    ];
-    setTransactions(fakeData);
-  }, []);
+  const fetchTransactions = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    console.log("l historique commence deja bien");  // Récupérer l'ID utilisateur stocké
+    if (!userId) return;
+
+    fetch(`http://192.168.1.122:3000/api/transactions?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => setTransactions(data))  // Met à jour le state avec les transactions
+      .catch(err => console.error(err));
+  };
+
+  fetchTransactions();
+}, []);
+useEffect(() => {
+  const fetchSolde = async () => {
+    console.log("Récupération du solde de l'utilisateur...");
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) return;
+
+    fetch(`http://192.168.1.122:3000/api/solde/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        setSolde(data.solde);
+      })
+      .catch(err => {
+        console.error('Erreur de récupération du solde :', err);
+      });
+  };
+
+  fetchSolde();
+}, []);
+
+
 
   return (
     <View style={styles.container}>
@@ -340,7 +365,10 @@ const HomeScreen = () => {
       <ScrollView>
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceLabel}>Votre solde</Text>
-          <Text style={styles.balanceText}>12 500 F</Text>
+          <Text style={styles.balanceText}>
+            {solde !== null ? `${parseFloat(solde).toLocaleString()} F` : 'Chargement...'}
+          </Text>
+
           <View style={{ alignItems: 'center' }}>
           {isLoadingQrCode ? (
             <Text>Chargement du QR Code...</Text>
