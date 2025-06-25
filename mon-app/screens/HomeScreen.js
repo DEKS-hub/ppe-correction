@@ -327,7 +327,7 @@ const HomeScreen = () => {
     console.log("l historique commence deja bien");  // Récupérer l'ID utilisateur stocké
     if (!userId) return;
 
-     fetch(`${IP_ADDRESS}:3000/api/historique?user_id=${userId}`)
+     fetch(`${IP_ADDRESS}/api/historique?user_id=${userId}`)
       .then(res => res.json())
       .then(result => {
         if (result.status === "ok") {

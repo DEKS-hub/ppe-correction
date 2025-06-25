@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import IP_ADDRESS from './ipConfig';
 
 const COLORS = {
   primary: '#4B3FF1',
@@ -24,15 +25,53 @@ const COLORS = {
 const TransferScreen = ({ navigation }) => {
   const [amount, setAmount] = useState('');
   const [recipient, setRecipient] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     if (!amount || !recipient) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
     }
 
-    Alert.alert('Transfert effectué', `Transfert de ${amount} F à ${recipient}`);
-    navigation.navigate('Home');
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      Alert.alert('Erreur', 'Veuillez entrer un montant valide.');
+      return;
+    }
+
+    const senderId = await AsyncStorage.getItem('userId');
+    if (!senderId) {
+      Alert.alert('Erreur', "Utilisateur non connecté.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${IP_ADDRESS}/transaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderId,
+          receiverPhone: recipient,
+          amount: numericAmount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Succès', 'Transfert effectué avec succès.');
+        setAmount('');
+        setRecipient('');
+        navigation.navigate('Home');
+      } else {
+        Alert.alert('Erreur', data.message || 'Échec du transfert.');
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,9 +98,9 @@ const TransferScreen = ({ navigation }) => {
           onChangeText={setRecipient}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleTransfer}>
+        <TouchableOpacity style={styles.button} onPress={handleTransfer} disabled={loading}>
           <Ionicons name="send-outline" size={20} color={COLORS.white} />
-          <Text style={styles.buttonText}>Envoyer</Text>
+          <Text style={styles.buttonText}>{loading ? 'Envoi...' : 'Envoyer'}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
