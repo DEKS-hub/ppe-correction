@@ -183,24 +183,37 @@ app.get('/api/qrcode', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
-app.get('/api/transactions', async (req, res) => {
+// Récupérer l'historique des transactions avec détails utilisateur
+app.get('/api/historique', async (req, res) => {
   const userId = req.query.user_id;
   if (!userId) return res.status(400).json({ error: 'ID utilisateur requis' });
-  console.log("ID utilisateur pour les transactions :", userId);
+
   try {
     const [rows] = await db.query(
-      `SELECT * FROM transactions 
-       WHERE sender_id = ? OR receiver_id = ? 
-       ORDER BY created_at DESC`,
+      `SELECT 
+         t.id,
+         t.sender_id,
+         s.name AS sender_name,
+         t.receiver_id,
+         r.name AS receiver_name,
+         t.amount,
+         t.date_transaction
+       FROM transactions t
+       LEFT JOIN users s ON t.sender_id = s.id
+       LEFT JOIN users r ON t.receiver_id = r.id
+       WHERE t.sender_id = ? OR t.receiver_id = ?
+       ORDER BY t.date_transaction DESC`,
       [userId, userId]
     );
-    console.log("Transactions récupérées pour l'utilisateur ID :", userId);
-    res.json(rows);
+
+    res.json({ status: "ok", data: rows });
   } catch (err) {
-    console.error(err);
+    console.error("Erreur récupération historique :", err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
+// Récupérer le solde d'un utilisateur
 app.get('/api/solde/:userId', async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -217,6 +230,46 @@ app.get('/api/solde/:userId', async (req, res) => {
   }
 });
 
+// Transaction entre utilisateurs
+app.post("/transaction", async (req, res) => {
+  const { senderId, receiverPhone, amount } = req.body;
+
+  if (!senderId || !receiverPhone || !amount || amount <= 0) {
+    return res.status(400).json({ message: "Données invalides" });
+  }
+
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [[sender]] = await conn.query("SELECT solde FROM users WHERE id = ?", [senderId]);
+    if (!sender) throw new Error("Émetteur introuvable");
+    if (sender.solde < amount) throw new Error("Solde insuffisant");
+
+    const [[receiver]] = await conn.query("SELECT id FROM users WHERE telephone = ?", [receiverPhone]);
+    if (!receiver) throw new Error("Destinataire introuvable");
+
+    const [debitResult] = await conn.query("UPDATE users SET solde = solde - ? WHERE id = ?", [amount, senderId]);
+    if (debitResult.affectedRows === 0) throw new Error("Échec du débit");
+
+    const [creditResult] = await conn.query("UPDATE users SET solde = solde + ? WHERE id = ?", [amount, receiver.id]);
+    if (creditResult.affectedRows === 0) throw new Error("Échec du crédit");
+
+    await conn.query(
+      "INSERT INTO transactions (sender_id, receiver_id, amount, date_transaction) VALUES (?, ?, ?, NOW())",
+      [senderId, receiver.id, amount]
+    );
+
+    await conn.commit();
+    res.status(200).json({ message: "Transaction réussie" });
+
+  } catch (error) {
+    await conn.rollback();
+    res.status(500).json({ message: "Transaction annulée", erreur: error.message });
+  } finally {
+    conn.release();
+  }
+});
 
 
 

@@ -290,7 +290,7 @@ const HomeScreen = () => {
     setIsLoadingQrCode(true);
     setQrCodeError(null);
     // Exemple avec ID utilisateur = 6
-    fetch("IP_ADDRESS/api/qrcode?id=${userId}")
+    fetch(`${IP_ADDRESS}/api/qrcode?id=${userId}`)
  // Assurez-vous que cet ID est dynamique si nécessaire
       .then(res => {
         console.log('Statut de la réponse API QR Code:', res.status);
@@ -327,10 +327,23 @@ const HomeScreen = () => {
     console.log("l historique commence deja bien");  // Récupérer l'ID utilisateur stocké
     if (!userId) return;
 
-    fetch(`IP_ADDRESS/api/transactions?user_id=${userId}`)
+     fetch(`${IP_ADDRESS}:3000/api/historique?user_id=${userId}`)
       .then(res => res.json())
-      .then(data => setTransactions(data))  // Met à jour le state avec les transactions
-      .catch(err => console.error(err));
+      .then(result => {
+        if (result.status === "ok") {
+          const dataWithType = result.data.map(tx => ({
+            ...tx,
+            type: tx.sender_id.toString() === userId ? 'transfer' : 'payment',
+            amount: tx.sender_id.toString() === userId ? -tx.amount : tx.amount
+          }));
+          setTransactions(dataWithType);
+        } else {
+          console.error("Erreur côté serveur :", result.error);
+        }
+      })
+      .catch(err => {
+        console.error("Erreur de requête transaction :", err);
+      });
   };
 
   fetchTransactions();
@@ -341,7 +354,7 @@ useEffect(() => {
     const userId = await AsyncStorage.getItem('userId');
     if (!userId) return;
 
-    fetch(`IP_ADDRESS/api/solde/${userId}`)
+   fetch(`${IP_ADDRESS}/api/solde/${userId}`)
       .then(res => res.json())
       .then(data => {
         setSolde(data.solde);

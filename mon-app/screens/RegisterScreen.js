@@ -43,7 +43,7 @@ export default function RegisterScreen({ navigation }) {
     }
 
     try {
-      const response = await axios.post('IP_ADDRESS/register', {
+      const response = await axios.post(`${IP_ADDRESS}/register`, {
         name,
         email,
         mobile,
