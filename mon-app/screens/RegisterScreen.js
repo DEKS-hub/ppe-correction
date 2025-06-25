@@ -75,8 +75,8 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const handleMobile = (text) => {
-    setMobile(text);
-    setMobileVerify(/^[6-9][0-9]{9}$/.test(text));
+  setMobile(text);
+  setMobileVerify(/^(70|71|72|73|74|75|76|77|78|79|90|91|92|93|94|95|96|97|98|99)\d{6}$/.test(text));
   };
 
   const handlePassword = (text) => {
@@ -180,7 +180,7 @@ export default function RegisterScreen({ navigation }) {
         </View>
         {mobile.length > 0 && !mobileVerify && (
           <Text style={styles.errorText}>
-            Le numéro doit commencer par 6-9 et contenir 10 chiffres.
+            Le numéro doit  etre conforme a celui utiliser sur le territoire.
           </Text>
         )}
 
