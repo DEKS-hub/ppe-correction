@@ -4,7 +4,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import IP_ADDRESS from 'ipConfig';
+import IP_ADDRESS from './ipConfig'	;
 const COLORS = {
   primary: '#4B3FF1',
   white: '#fff',

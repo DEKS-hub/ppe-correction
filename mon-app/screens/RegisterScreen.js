@@ -17,7 +17,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Error from 'react-native-vector-icons/MaterialIcons';
 import { RadioButton } from 'react-native-paper';
-import IP_ADDRESS from 'ipConfig';
+import IP_ADDRESS from './ipConfig';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
