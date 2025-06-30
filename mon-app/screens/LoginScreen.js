@@ -18,20 +18,33 @@ export default function LoginScreen() {
 
     setLoading(true);
 
-    try {
-    const response = await fetch(`${IP_ADDRESS}/login-user`, {
+     try {
+      const response = await fetch(`${IP_ADDRESS}/login-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: identifier, password }),
       });
 
-      const result = await response.json();
+       const result = await response.json();
 
       if (result.status === 'ok') {
-        await AsyncStorage.setItem('token', result.data);
-      if (result.userType) {
-          await AsyncStorage.setItem('userType', result.userType);
-        }        
+        const userId = result.data.id;
+        const token = result.data.token;
+        const userType = result.data.userType;
+       if (userId) {
+          await AsyncStorage.setItem('userId', userId.toString());
+          console.log("✅ ID utilisateur stocké :", userId);
+        } else {
+          console.warn("⚠️ Aucun ID utilisateur trouvé dans la réponse.");
+        }
+
+        if (token) {
+          await AsyncStorage.setItem('token', token);
+        }
+
+        if (userType) {
+          await AsyncStorage.setItem('userType', userType);
+        }       
         navigation.navigate('Home');
       } else {
         Alert.alert('Erreur', result.data || 'Identifiant ou mot de passe incorrect.');

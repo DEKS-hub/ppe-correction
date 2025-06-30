@@ -78,7 +78,7 @@ app.post("/register", async (req, res) => {
 });
 
 
-
+// Connexion utilisateur
 // Connexion
 app.post("/login-user", async (req, res) => {
   const { email, password } = req.body;
@@ -101,12 +101,23 @@ app.post("/login-user", async (req, res) => {
     console.log("preparation pour la connexion");
 
     const token = jwt.sign({ email: user.email }, JWT_SECRET);
-    res.send({ status: "ok", data: token, userType: user.userType });
+    res.send({
+    status: "ok",
+    data: {
+    token: token,
+    id: user.id,
+    userType: user.userType
+    }
+    });
+    console.log("Connexion réussie voici l id de l utilisateur :", user.id);
   } catch (error) {
     console.error("Erreur lors de la connexion :", error);
     res.send({ error: "Erreur serveur" });
   }
 });
+
+
+
 
 
 // Récupération des infos utilisateur via token
@@ -160,7 +171,7 @@ app.post("/delete-user", async (req, res) => {
   }
 });
 
-// GET /api/qrcode?id=6
+// GET /api/qrcode
 app.get('/api/qrcode', async (req, res) => {
   const id = req.query.id;
   console.log("ID utilisateur reçu :", id);
@@ -214,21 +225,34 @@ app.get('/api/historique', async (req, res) => {
 });
 
 // Récupérer le solde d'un utilisateur
+// Récupérer le solde d'un utilisateur
 app.get('/api/solde/:userId', async (req, res) => {
   const userId = req.params.userId;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'ID utilisateur manquant' });
+  }
+
   try {
+    console.log("🔍 Recherche du solde pour l'utilisateur ID :", userId);
+
     const [rows] = await db.execute('SELECT solde FROM users WHERE id = ?', [userId]);
-    console.log("Solde récupéré pour l'utilisateur ID :", userId);
+
     if (rows.length > 0) {
-      res.json({ solde: rows[0].solde });
+      const solde = rows[0].solde;
+      console.log("✅ Solde trouvé :", solde);
+      return res.json({ solde });
     } else {
-      res.status(404).json({ error: 'Utilisateur non trouvé' });
+      console.warn("⚠️ Utilisateur non trouvé avec l'ID :", userId);
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error("❌ Erreur serveur :", err);
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
 
 // Transaction entre utilisateurs
 app.post("/transaction", async (req, res) => {

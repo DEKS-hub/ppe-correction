@@ -282,45 +282,61 @@ const HomeScreen = () => {
   const [isLoadingQrCode, setIsLoadingQrCode] = useState(true); // Pour l'état de chargement du QR Code
   const [qrCodeError, setQrCodeError] = useState(null); // Pour les erreurs de chargement du QR Code
   const [solde, setSolde] = useState(null);
+  const [userId, setUserId] = useState(null);
+
 
 
 
   // Récupération du QR Code
-  useEffect(() => {
-    setIsLoadingQrCode(true);
-    setQrCodeError(null);
-    // Exemple avec ID utilisateur = 6
-    fetch(`${IP_ADDRESS}/api/qrcode?id=${userId}`)
- // Assurez-vous que cet ID est dynamique si nécessaire
-      .then(res => {
-        console.log('Statut de la réponse API QR Code:', res.status);
-        if (!res.ok) {
-          // Essayer de parser le corps de l'erreur si possible
-          return res.json().then(errData => {
-            throw new Error(`Erreur HTTP ${res.status}: ${errData.error || 'Erreur inconnue du serveur'}`);
-          }).catch(() => { // Au cas où le corps de l'erreur n'est pas JSON
-            throw new Error(`Erreur HTTP ${res.status}`);
-          });
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('Données QR Code reçues:', data);
-        if (data.qrCode) {
-          setQrCode(data.qrCode); // data.qrCode doit être une chaîne Data URL (ex: "data:image/png;base64,iVBORw0KGgo...")
-        } else {
-          throw new Error('Aucune donnée qrCode trouvée dans la réponse.');
-        }
-      })
-      .catch(err => {
-        console.error('Erreur API QR code:', err);
-        setQrCodeError(err.message);
-      })
-      .finally(() => {
-        setIsLoadingQrCode(false);
-      });
-  }, []);
-  // donnees pour les transactions
+// Récupération de l'userId au montage du composant
+useEffect(() => {
+  const fetchUserId = async () => {
+    const storedUserId = await AsyncStorage.getItem('userId');
+    setUserId(storedUserId);
+  };
+  fetchUserId();
+}, []);
+
+// Récupération du QR Code
+useEffect(() => {
+  if (!userId) return;
+
+  setIsLoadingQrCode(true);
+  setQrCodeError(null);
+
+  console.log("userId depuis AsyncStorage:", userId);
+  console.log("URL appelée:", `${IP_ADDRESS}/api/qrcode?id=${userId}`);
+
+  fetch(`${IP_ADDRESS}/api/qrcode?id=${userId}`)
+    .then(res => {
+      console.log('Statut de la réponse API QR Code:', res.status);
+      if (!res.ok) {
+        return res.json().then(errData => {
+          throw new Error(`Erreur HTTP ${res.status}: ${errData.error || 'Erreur inconnue du serveur'}`);
+        }).catch(() => {
+          throw new Error(`Erreur HTTP ${res.status}`);
+        });
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log('Données QR Code reçues:', data);
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+      } else {
+        throw new Error('Aucune donnée qrCode trouvée dans la réponse.');
+      }
+    })
+    .catch(err => {
+      console.error('Erreur API QR code:', err);
+      setQrCodeError(err.message);
+    })
+    .finally(() => {
+      setIsLoadingQrCode(false);
+    });
+}, [userId]);
+
+// Récupération de l'historique des transactions
   useEffect(() => {
   const fetchTransactions = async () => {
     const userId = await AsyncStorage.getItem('userId');
@@ -348,24 +364,45 @@ const HomeScreen = () => {
 
   fetchTransactions();
 }, []);
+// Récupération du solde de l'utilisateur
 useEffect(() => {
   const fetchSolde = async () => {
-    console.log("Récupération du solde de l'utilisateur...");
-    const userId = await AsyncStorage.getItem('userId');
-    if (!userId) return;
+    console.log("📦 Récupération du solde de l'utilisateur...");
 
-   fetch(`${IP_ADDRESS}/api/solde/${userId}`)
-      .then(res => res.json())
-      .then(data => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+
+      if (!userId) {
+        console.error("❌ userId non trouvé dans AsyncStorage");
+        return;
+      }
+
+      console.log("✅ userId récupéré :", userId);
+
+      const response = await fetch(`${IP_ADDRESS}/api/solde/${userId}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Erreur ${response.status} : ${errorData.error}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ Solde reçu :", data);
+
+      if (data.solde !== undefined) {
         setSolde(data.solde);
-      })
-      .catch(err => {
-        console.error('Erreur de récupération du solde :', err);
-      });
+      } else {
+        console.error("❌ Réponse invalide : 'solde' non défini");
+      }
+
+    } catch (err) {
+      console.error("❌ Erreur de récupération du solde :", err.message);
+    }
   };
 
   fetchSolde();
 }, []);
+
 
 
 
