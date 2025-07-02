@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import IP_ADDRESS from './ipConfig';
 
 const COLORS = {
@@ -28,6 +29,7 @@ const TransferScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handleTransfer = async () => {
+    console.log("Tentative de transfert");
     if (!amount || !recipient) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
@@ -68,6 +70,7 @@ const TransferScreen = ({ navigation }) => {
         Alert.alert('Erreur', data.message || 'Échec du transfert.');
       }
     } catch (error) {
+      console.error(error);
       Alert.alert('Erreur', 'Impossible de contacter le serveur.');
     } finally {
       setLoading(false);

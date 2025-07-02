@@ -225,7 +225,6 @@ app.get('/api/historique', async (req, res) => {
 });
 
 // Récupérer le solde d'un utilisateur
-// Récupérer le solde d'un utilisateur
 app.get('/api/solde/:userId', async (req, res) => {
   const userId = req.params.userId;
 
@@ -248,7 +247,7 @@ app.get('/api/solde/:userId', async (req, res) => {
     }
 
   } catch (err) {
-    console.error("❌ Erreur serveur :", err);
+    console.error(" Erreur serveur :", err);
     return res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -257,6 +256,7 @@ app.get('/api/solde/:userId', async (req, res) => {
 // Transaction entre utilisateurs
 app.post("/transaction", async (req, res) => {
   const { senderId, receiverPhone, amount } = req.body;
+  console.log("Données de transaction reçues :", req.body);
 
   if (!senderId || !receiverPhone || !amount || amount <= 0) {
     return res.status(400).json({ message: "Données invalides" });
@@ -267,27 +267,45 @@ app.post("/transaction", async (req, res) => {
     await conn.beginTransaction();
 
     const [[sender]] = await conn.query("SELECT solde FROM users WHERE id = ?", [senderId]);
-    if (!sender) throw new Error("Émetteur introuvable");
-    if (sender.solde < amount) throw new Error("Solde insuffisant");
+    if (!sender) {
+      throw new Error("Émetteur introuvable");
+    }
+    if (sender.solde < amount) {
+      throw new Error("Solde insuffisant");
+    }
 
-    const [[receiver]] = await conn.query("SELECT id FROM users WHERE telephone = ?", [receiverPhone]);
-    if (!receiver) throw new Error("Destinataire introuvable");
+    const [[receiver]] = await conn.query("SELECT id FROM users WHERE mobile = ?", [receiverPhone]);
+    if (!receiver) {
+      throw new Error("Destinataire introuvable");
+    }
 
-    const [debitResult] = await conn.query("UPDATE users SET solde = solde - ? WHERE id = ?", [amount, senderId]);
-    if (debitResult.affectedRows === 0) throw new Error("Échec du débit");
+    const [debitResult] = await conn.query(
+      "UPDATE users SET solde = solde - ? WHERE id = ?",
+      [amount, senderId]
+    );
+    if (debitResult.affectedRows === 0) {
+      throw new Error("Échec du débit");
+    }
 
-    const [creditResult] = await conn.query("UPDATE users SET solde = solde + ? WHERE id = ?", [amount, receiver.id]);
-    if (creditResult.affectedRows === 0) throw new Error("Échec du crédit");
+    const [creditResult] = await conn.query(
+      "UPDATE users SET solde = solde + ? WHERE id = ?",
+      [amount, receiver.id]
+    );
+    if (creditResult.affectedRows === 0) {
+      throw new Error("Échec du crédit");
+    }
 
     await conn.query(
-      "INSERT INTO transactions (sender_id, receiver_id, amount, date_transaction) VALUES (?, ?, ?, NOW())",
-      [senderId, receiver.id, amount]
+    "INSERT INTO transactions (sender_id, receiver_id, amount) VALUES (?, ?, ?)",
+    [senderId, receiver.id, amount]
     );
+
 
     await conn.commit();
     res.status(200).json({ message: "Transaction réussie" });
 
   } catch (error) {
+    console.error("Erreur transaction :", error.message);
     await conn.rollback();
     res.status(500).json({ message: "Transaction annulée", erreur: error.message });
   } finally {
