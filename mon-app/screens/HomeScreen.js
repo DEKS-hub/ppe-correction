@@ -339,31 +339,33 @@ useEffect(() => {
 // Récupération de l'historique des transactions
   useEffect(() => {
   const fetchTransactions = async () => {
-    const userId = await AsyncStorage.getItem('userId');
-    console.log("l historique commence deja bien");  // Récupérer l'ID utilisateur stocké
-    if (!userId) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return;
 
-     fetch(`${IP_ADDRESS}/api/historique?user_id=${userId}`)
-      .then(res => res.json())
-      .then(result => {
-        if (result.status === "ok") {
-          const dataWithType = result.data.map(tx => ({
-            ...tx,
-            type: tx.sender_id.toString() === userId ? 'transfer' : 'payment',
-            amount: tx.sender_id.toString() === userId ? -tx.amount : tx.amount
-          }));
-          setTransactions(dataWithType);
-        } else {
-          console.error("Erreur côté serveur :", result.error);
-        }
-      })
-      .catch(err => {
-        console.error("Erreur de requête transaction :", err);
-      });
+      console.log("L'historique commence déjà bien");
+
+      const response = await fetch(`${IP_ADDRESS}/api/historique?user_id=${userId}`);
+      const result = await response.json();
+
+      if (result.status === "ok") {
+        const dataWithType = result.data.map(tx => ({
+          ...tx,
+          type: tx.sender_id.toString() === userId ? 'transfer' : 'payment',
+          amount: tx.sender_id.toString() === userId ? -tx.amount : tx.amount
+        }));
+        setTransactions(dataWithType);
+      } else {
+        console.error("Erreur côté serveur :", result.error);
+      }
+    } catch (err) {
+      console.error("Erreur de requête transaction :", err);
+    }
   };
 
   fetchTransactions();
 }, []);
+
 // Récupération du solde de l'utilisateur
 useEffect(() => {
   const fetchSolde = async () => {

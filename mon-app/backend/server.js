@@ -208,12 +208,14 @@ app.get('/api/historique', async (req, res) => {
          t.receiver_id,
          r.name AS receiver_name,
          t.amount,
-         t.date_transaction
+         t.status,
+         t.transaction_type,
+         t.created_at
        FROM transactions t
        LEFT JOIN users s ON t.sender_id = s.id
        LEFT JOIN users r ON t.receiver_id = r.id
        WHERE t.sender_id = ? OR t.receiver_id = ?
-       ORDER BY t.date_transaction DESC`,
+       ORDER BY t.created_at DESC`,
       [userId, userId]
     );
 
@@ -223,6 +225,7 @@ app.get('/api/historique', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
 
 // Récupérer le solde d'un utilisateur
 app.get('/api/solde/:userId', async (req, res) => {
