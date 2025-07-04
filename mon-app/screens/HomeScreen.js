@@ -450,6 +450,16 @@ useEffect(() => {
             <Text style={styles.menuText}>Paiement</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('QrScanner')}
+          >
+            <View style={[styles.menuIconCircle, { backgroundColor: '#D1E8FF' }]}>
+              <Ionicons name="qr-code-outline" size={24} color={COLORS.primary} />
+            </View>
+            <Text style={styles.menuText}>Scanner QR</Text>
+        </TouchableOpacity>
+
 
         <Text style={styles.sectionTitle}>Transactions récentes</Text>
         <View style={styles.transactions}>

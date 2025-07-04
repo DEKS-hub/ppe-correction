@@ -23,13 +23,20 @@ const COLORS = {
   error: '#F15B3F',
 };
 
-const TransferScreen = ({ navigation }) => {
+const TransferScreen = ({ navigation, route }) => {
   const [amount, setAmount] = useState('');
   const [recipient, setRecipient] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRecipientFixed, setIsRecipientFixed] = useState(false);
+
+  useEffect(() => {
+    if (route.params?.receiverPhone) {
+      setRecipient(route.params.receiverPhone);
+      setIsRecipientFixed(true); // bloque la modification du numéro
+    }
+  }, [route.params]);
 
   const handleTransfer = async () => {
-    console.log("Tentative de transfert");
     if (!amount || !recipient) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
@@ -64,7 +71,7 @@ const TransferScreen = ({ navigation }) => {
       if (response.ok) {
         Alert.alert('Succès', 'Transfert effectué avec succès.');
         setAmount('');
-        setRecipient('');
+        if (!isRecipientFixed) setRecipient('');
         navigation.navigate('Home');
       } else {
         Alert.alert('Erreur', data.message || 'Échec du transfert.');
@@ -99,9 +106,14 @@ const TransferScreen = ({ navigation }) => {
           keyboardType="phone-pad"
           value={recipient}
           onChangeText={setRecipient}
+          editable={!isRecipientFixed} // bloque si reçu par QR
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleTransfer} disabled={loading}>
+        <TouchableOpacity
+          style={[styles.button, loading && { opacity: 0.7 }]}
+          onPress={handleTransfer}
+          disabled={loading}
+        >
           <Ionicons name="send-outline" size={20} color={COLORS.white} />
           <Text style={styles.buttonText}>{loading ? 'Envoi...' : 'Envoyer'}</Text>
         </TouchableOpacity>

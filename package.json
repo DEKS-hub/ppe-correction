@@ -21,6 +21,7 @@
     "dotenv": "^16.5.0",
     "expo": "^53.0.9",
     "expo-barcode-scanner": "^13.0.1",
+    "expo-camera": "~16.1.10",
     "expo-network": "^7.1.5",
     "expo-status-bar": "~2.2.3",
     "express": "^5.1.0",
