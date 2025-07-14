@@ -50,6 +50,7 @@ export default function RegisterScreen({ navigation }) {
         password,
         user_type: userType,
       });
+    
 
       if (response.data.status === 'success' || response.data.message === 'Compte créé avec succès') {
         Alert.alert('Succès', 'Inscription réussie.', [
@@ -76,7 +77,7 @@ export default function RegisterScreen({ navigation }) {
 
   const handleMobile = (text) => {
   setMobile(text);
-  setMobileVerify(/^(70|71|72|73|74|75|76|77|78|79|90|91|92|93|94|95|96|97|98|99)\d{6}$/.test(text));
+  setMobileVerify(/^(70|71|72|73|90|91|92|96|97|98|99)\d{6}$/.test(text));
   };
 
   const handlePassword = (text) => {

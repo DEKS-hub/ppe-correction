@@ -405,6 +405,39 @@ useEffect(() => {
   fetchSolde();
 }, []);
 
+const refreshAll = async () => {
+  if (!userId) return;
+
+  console.log("🔁 Rafraîchissement en cours...");
+
+  try {
+    // Récupération du solde
+    const resSolde = await fetch(`${IP_ADDRESS}/api/solde/${userId}`);
+    const soldeData = await resSolde.json();
+    setSolde(soldeData.solde);
+
+    // Récupération du QR code
+    const resQR = await fetch(`${IP_ADDRESS}/api/qrcode?id=${userId}`);
+    const qrData = await resQR.json();
+    setQrCode(qrData.qrCode);
+
+    // Récupération des transactions
+    const resHist = await fetch(`${IP_ADDRESS}/api/historique?user_id=${userId}`);
+    const histData = await resHist.json();
+    const dataWithType = histData.data.map(tx => ({
+      ...tx,
+      type: tx.sender_id.toString() === userId ? 'transfer' : 'payment',
+      amount: tx.sender_id.toString() === userId ? -tx.amount : tx.amount
+    }));
+    setTransactions(dataWithType);
+
+    console.log("✅ Rafraîchissement terminé");
+  } catch (error) {
+    console.error("❌ Erreur lors du rafraîchissement :", error);
+  }
+};
+
+
 
 
 
@@ -421,6 +454,11 @@ useEffect(() => {
           <Text style={styles.balanceText}>
             {solde !== null ? `${parseFloat(solde).toLocaleString()} F` : 'Chargement...'}
           </Text>
+          
+          <TouchableOpacity onPress={refreshAll} style={{ marginTop: 10, backgroundColor: COLORS.white, padding: 8, borderRadius: 10 }}>
+          <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}></Text>
+          </TouchableOpacity>
+
 
           <View style={{ alignItems: 'center' }}>
           {isLoadingQrCode ? (

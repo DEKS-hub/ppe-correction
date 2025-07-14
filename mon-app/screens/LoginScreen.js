@@ -18,20 +18,23 @@ export default function LoginScreen() {
 
     setLoading(true);
 
-     try {
+    try {
       const response = await fetch(`${IP_ADDRESS}/login-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: identifier, password }),
       });
 
-       const result = await response.json();
+      const result = await response.json();
 
       if (result.status === 'ok') {
         const userId = result.data.id;
         const token = result.data.token;
         const userType = result.data.userType;
-       if (userId) {
+
+        console.log("le user qui est retourner ",userType);
+
+        if (userId) {
           await AsyncStorage.setItem('userId', userId.toString());
           console.log("✅ ID utilisateur stocké :", userId);
         } else {
@@ -44,8 +47,17 @@ export default function LoginScreen() {
 
         if (userType) {
           await AsyncStorage.setItem('userType', userType);
-        }       
-        navigation.navigate('Home');
+          console.log('UserType reçu:', userType);
+        }
+
+        // Redirection selon userType, tolérance casse
+        if (userType === 'Admin') {
+          console.log("TEST navigation vers AdminScreen");
+          navigation.navigate('AdminScreen'); // vérifie que ce nom correspond à ton écran admin
+        } else {
+          console.log("TEST navigation vers Home");
+          navigation.navigate('Home');
+        }
       } else {
         Alert.alert('Erreur', result.data || 'Identifiant ou mot de passe incorrect.');
       }
@@ -56,6 +68,12 @@ export default function LoginScreen() {
 
     setLoading(false);
   };
+// Test de redirection forcée
+<TouchableOpacity onPress={() => navigation.navigate('AdminScreen')}>
+  <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>
+    Test Admin
+  </Text>
+</TouchableOpacity>
 
   return (
     <View style={styles.container}>

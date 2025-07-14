@@ -2,18 +2,17 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import LoginScreen from './mon-app/screens/LoginScreen';
 import SignUpScreen from './mon-app/screens/RegisterScreen';
 import HomeScreen from './mon-app/screens/HomeScreen';
 import TransferScreen from './mon-app/screens/TransferScreen';
 import PaymentScreen from './mon-app/screens/PaymentScreen';
 import HistoryScreen from './mon-app/screens/HistoryScreen';
-import QrScannerScreen from './mon-app/screens/QrScannerScreen';
-import LoyaltyScreen from './mon-app/screens/LoyaltyScreen';
 import SupportScreen from './mon-app/screens/SupportScreen';
-import ProfileScreen from './mon-app/screens/ProfileScreen';
 import ForgotPasswordScreen from './mon-app/screens/ForgotPasswordScreen';
+import AdminScreen from './mon-app/screens/AdminScreen';
+
+
 
 const Stack = createNativeStackNavigator();
 
@@ -27,11 +26,10 @@ export default function App() {
         <Stack.Screen name="payment" component={PaymentScreen} />
         <Stack.Screen name="Transfer" component={TransferScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />
-        <Stack.Screen name="QrScanner" component={QrScannerScreen} />
-        <Stack.Screen name="Loyalty" component={LoyaltyScreen} />
+
         <Stack.Screen name="Support" component={SupportScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="AdminScreen" component={AdminScreen} />
         {/* Add more screens as needed */}
       </Stack.Navigator>
     </NavigationContainer>

@@ -7,6 +7,8 @@ const app = express();
 const port = 3000;
 const JWT_SECRET = "hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jdsds039[]]pou89ywe";
 const { v4: uuidv4 } = require('uuid');
+const router = express.Router();
+
 
 app.use(express.json());
 app.use(cors());
@@ -79,7 +81,6 @@ app.post("/register", async (req, res) => {
 
 
 // Connexion utilisateur
-// Connexion
 app.post("/login-user", async (req, res) => {
   const { email, password } = req.body;
   
@@ -99,6 +100,7 @@ app.post("/login-user", async (req, res) => {
       return res.send({ data: "Mot de passe incorrect" });
     }
     console.log("preparation pour la connexion");
+    console.log("le type d utilisateur", user.user_type);
 
     const token = jwt.sign({ email: user.email }, JWT_SECRET);
     res.send({
@@ -106,10 +108,12 @@ app.post("/login-user", async (req, res) => {
     data: {
     token: token,
     id: user.id,
-    userType: user.userType
+    userType: user.user_type
     }
     });
     console.log("Connexion réussie voici l id de l utilisateur :", user.id);
+    console.log("Token généré :", token);
+    console.log("Type d'utilisateur :", user.user_type);
   } catch (error) {
     console.error("Erreur lors de la connexion :", error);
     res.send({ error: "Erreur serveur" });
@@ -134,42 +138,10 @@ app.post("/userdata", async (req, res) => {
   }
 });
 
-// Mise à jour utilisateur
-app.post("/update-user", async (req, res) => {
-  const { name, email, mobile, image, gender, profession } = req.body;
 
-  try {
-    await db.query(
-      "UPDATE users SET name = ?, mobile = ?, image = ?, gender = ?, profession = ? WHERE email = ?",
-      [name, mobile, image, gender, profession, email]
-    );
-    res.send({ status: "Ok", data: "Updated" });
-  } catch (error) {
-    res.send({ error });
-  }
-});
 
-// Récupérer tous les utilisateurs
-app.get("/get-all-user", async (req, res) => {
-  try {
-    const [rows] = await db.query("SELECT * FROM users");
-    res.send({ status: "Ok", data: rows });
-  } catch (error) {
-    res.send({ error });
-  }
-});
 
-// Supprimer un utilisateur
-app.post("/delete-user", async (req, res) => {
-  const { id } = req.body;
 
-  try {
-    await db.query("DELETE FROM users WHERE id = ?", [id]);
-    res.send({ status: "Ok", data: "User Deleted" });
-  } catch (error) {
-    res.send({ error });
-  }
-});
 
 // GET /api/qrcode
 app.get('/api/qrcode', async (req, res) => {
@@ -317,7 +289,74 @@ app.post("/transaction", async (req, res) => {
 });
 
 
+// Mise à jour de la fonction utilitaire
+async function getUserByEmailOrNumero(identifier) {
+  let query, params;
+  if (/^\d+$/.test(identifier)) { // Si c’est un nombre (ici numéro)
+    query = 'SELECT id, solde FROM users WHERE numero = ?';
+    params = [identifier];
+  } else { // Sinon c’est un email
+    query = 'SELECT id, solde FROM users WHERE email = ?';
+    params = [identifier];
+  }
+  const [users] = await db.promise().query(query, params);
+  return users[0] || null;
+}
 
+// Routes corrigées
+router.post('/api/admin/credit', async (req, res) => {
+  const { recipient, amount } = req.body;
+  const montant = parseFloat(amount);
+
+  if (!recipient || !amount || isNaN(montant) || montant <= 0) {
+    return res.status(400).json({ status: 'error', error: 'Données invalides.' });
+  }
+
+  try {
+    const user = await getUserByEmailOrNumero(recipient);
+    if (!user) {
+      return res.status(404).json({ status: 'error', error: 'Utilisateur non trouvé.' });
+    }
+
+    const nouveauSolde = parseFloat(user.solde) + montant;
+    await db.promise().query('UPDATE users SET solde = ? WHERE id = ?', [nouveauSolde, user.id]);
+
+    return res.json({ status: 'ok', message: 'Compte crédité.', solde: nouveauSolde });
+  } catch (err) {
+    console.error('Erreur crédit:', err);
+    return res.status(500).json({ status: 'error', error: 'Erreur serveur.' });
+  }
+});
+
+router.post('/api/admin/debit', async (req, res) => {
+  const { recipient, amount } = req.body;
+  const montant = parseFloat(amount);
+
+  if (!recipient || !amount || isNaN(montant) || montant <= 0) {
+    return res.status(400).json({ status: 'error', error: 'Données invalides.' });
+  }
+
+  try {
+    const user = await getUserByEmailOrNumero(recipient);
+    if (!user) {
+      return res.status(404).json({ status: 'error', error: 'Utilisateur non trouvé.' });
+    }
+
+    if (parseFloat(user.solde) < montant) {
+      return res.status(400).json({ status: 'error', error: 'Solde insuffisant.' });
+    }
+
+    const nouveauSolde = parseFloat(user.solde) - montant;
+    await db.promise().query('UPDATE users SET solde = ? WHERE id = ?', [nouveauSolde, user.id]);
+
+    return res.json({ status: 'ok', message: 'Compte débité.', solde: nouveauSolde });
+  } catch (err) {
+    console.error('Erreur débit:', err);
+    return res.status(500).json({ status: 'error', error: 'Erreur serveur.' });
+  }
+});
+
+module.exports = router;
 
 
 // Démarrage serveur
