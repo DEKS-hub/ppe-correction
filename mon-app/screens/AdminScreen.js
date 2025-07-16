@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import IP_ADDRESS from './ipConfig';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import IP_ADDRESS from './ipConfig'; // Assurez-vous que ipConfig.js fournit la bonne adresse IP
 
 const AdminScreen = () => {
   const [recipient, setRecipient] = useState('');
@@ -13,29 +13,59 @@ const AdminScreen = () => {
       return;
     }
 
+    // Validation de base pour le montant afin d'éviter d'envoyer des valeurs non numériques
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      Alert.alert("Erreur", "Le montant doit être un nombre positif.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch(`${IP_ADDRESS}/api/admin/${type}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipient, amount: parseFloat(amount) }),
+        body: JSON.stringify({ recipient, amount: parsedAmount }), // Utilisation du montant analysé
       });
 
-      const data = await res.json();
+      // Lire le corps de la réponse une seule fois, en tant que texte
+      const responseText = await res.text();
+
+      // Vérifier si la réponse a été réussie (statut 200-299)
+      if (!res.ok) {
+        let errorMessage = `Erreur serveur (${res.status})`;
+        try {
+          // Tenter d'analyser le texte en JSON
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonParseError) {
+          // Si ce n'est pas du JSON, utiliser le texte brut
+          errorMessage = `Erreur inattendue: ${responseText.substring(0, 100)}... (Vérifiez la console du serveur)`;
+        }
+        Alert.alert("Erreur", errorMessage);
+        setLoading(false);
+        return;
+      }
+
+      // Si la réponse est OK, analyser le texte en JSON
+      const data = JSON.parse(responseText);
 
       if (data.status === "ok") {
-        Alert.alert("Succès", `Compte ${type} avec succès.`);
+        Alert.alert("Succès", `Compte ${type} avec succès. Nouveau solde: ${data.solde}`);
         setRecipient('');
         setAmount('');
       } else {
+        // Cela gère les cas où le serveur renvoie le statut 200 mais avec status: 'error' en JSON
         Alert.alert("Erreur", data.error || `Échec de la ${type}.`);
       }
     } catch (error) {
-      Alert.alert("Erreur", error.message);
+      // Cela intercepte les erreurs réseau (par exemple, serveur inaccessible, IP_ADDRESS incorrecte)
+      console.error('Erreur réseau ou de récupération:', error);
+      Alert.alert("Erreur de connexion", `Impossible de se connecter au serveur. Vérifiez votre IP_ADDRESS et la disponibilité du serveur. Détails: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -44,9 +74,11 @@ const AdminScreen = () => {
 
       <TextInput
         style={styles.input}
-        placeholder="Email ou ID de l'utilisateur"
+        placeholder="Email ou numéro de téléphone du destinataire"
         value={recipient}
         onChangeText={setRecipient}
+        autoCapitalize="none" // Important pour la saisie d'e-mail
+        keyboardType={/^\d+$/.test(recipient) ? 'numeric' : 'default'} // Type de clavier dynamique
       />
 
       <TextInput
@@ -63,7 +95,11 @@ const AdminScreen = () => {
           onPress={() => handleTransaction('credit')}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>Créditer</Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Créditer</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -71,7 +107,11 @@ const AdminScreen = () => {
           onPress={() => handleTransaction('debit')}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>Débiter</Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Débiter</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -79,18 +119,55 @@ const AdminScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 16, borderRadius: 8 },
-  buttonsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: '#f5f5f5', // Arrière-plan clair pour un meilleur contraste
+  },
+  title: {
+    fontSize: 26, // Titre légèrement plus grand
+    fontWeight: 'bold',
+    marginBottom: 30, // Plus d'espace sous le titre
+    textAlign: 'center',
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd', // Couleur de bordure plus claire
+    padding: 12, // Plus de rembourrage
+    marginBottom: 20, // Plus d'espace entre les entrées
+    borderRadius: 10, // Coins plus arrondis
+    backgroundColor: '#fff', // Arrière-plan blanc pour les entrées
+    fontSize: 16,
+    shadowColor: '#000', // Ombre subtile pour les entrées
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  buttonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around', // Distribuer les boutons uniformément
+    marginTop: 10, // Espace au-dessus des boutons
+  },
   button: {
     flex: 1,
-    padding: 14,
-    borderRadius: 10,
+    padding: 16, // Plus de rembourrage pour les boutons
+    borderRadius: 12, // Boutons plus arrondis
     alignItems: 'center',
-    marginHorizontal: 5,
+    marginHorizontal: 8, // Plus de marge entre les boutons
+    shadowColor: '#000', // Ombre pour les boutons
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18, // Texte plus grand pour les boutons
+  },
 });
 
 export default AdminScreen;

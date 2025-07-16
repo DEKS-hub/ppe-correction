@@ -292,39 +292,41 @@ app.post("/transaction", async (req, res) => {
 // Mise à jour de la fonction utilitaire
 async function getUserByEmailOrNumero(identifier) {
   let query, params;
-  if (/^\d+$/.test(identifier)) { // Si c’est un nombre (ici numéro)
-    query = 'SELECT id, solde FROM users WHERE numero = ?';
+  if (/^\d+$/.test(identifier)) { // Si c’est un nombre (ici numéro de mobile)
+    // CORRECTION : Utilisation de 'mobile' au lieu de 'numero'
+    query = 'SELECT id, solde FROM users WHERE mobile = ?';
     params = [identifier];
   } else { // Sinon c’est un email
     query = 'SELECT id, solde FROM users WHERE email = ?';
     params = [identifier];
   }
-  const [users] = await db.promise().query(query, params);
+  const [users] = await db.query(query, params);
   return users[0] || null;
 }
 
-// Routes corrigées
+// Routes corrigées (utilisent le 'router' défini plus haut)
 router.post('/api/admin/credit', async (req, res) => {
   const { recipient, amount } = req.body;
   const montant = parseFloat(amount);
 
   if (!recipient || !amount || isNaN(montant) || montant <= 0) {
-    return res.status(400).json({ status: 'error', error: 'Données invalides.' });
+    return res.status(400).json({ status: 'error', error: 'Données invalides : destinataire et montant positif requis.' });
   }
+  console.log("Tentative de crédit pour le destinataire :", recipient, "avec le montant :", montant);
 
   try {
     const user = await getUserByEmailOrNumero(recipient);
     if (!user) {
       return res.status(404).json({ status: 'error', error: 'Utilisateur non trouvé.' });
     }
-
+console.log("Utilisateur trouvé :", user);
     const nouveauSolde = parseFloat(user.solde) + montant;
-    await db.promise().query('UPDATE users SET solde = ? WHERE id = ?', [nouveauSolde, user.id]);
-
-    return res.json({ status: 'ok', message: 'Compte crédité.', solde: nouveauSolde });
+    await db.query('UPDATE users SET solde = ? WHERE id = ?', [nouveauSolde, user.id]);
+console.log("Nouveau solde après crédit :", nouveauSolde);
+    return res.status(200).json({ status: 'ok', message: 'Compte crédité.', solde: nouveauSolde });
   } catch (err) {
     console.error('Erreur crédit:', err);
-    return res.status(500).json({ status: 'error', error: 'Erreur serveur.' });
+    return res.status(500).json({ status: 'error', error: 'Erreur serveur lors du crédit.' });
   }
 });
 
@@ -333,7 +335,7 @@ router.post('/api/admin/debit', async (req, res) => {
   const montant = parseFloat(amount);
 
   if (!recipient || !amount || isNaN(montant) || montant <= 0) {
-    return res.status(400).json({ status: 'error', error: 'Données invalides.' });
+    return res.status(400).json({ status: 'error', error: 'Données invalides : destinataire et montant positif requis.' });
   }
 
   try {
@@ -347,17 +349,16 @@ router.post('/api/admin/debit', async (req, res) => {
     }
 
     const nouveauSolde = parseFloat(user.solde) - montant;
-    await db.promise().query('UPDATE users SET solde = ? WHERE id = ?', [nouveauSolde, user.id]);
+    await db.query('UPDATE users SET solde = ? WHERE id = ?', [nouveauSolde, user.id]);
 
-    return res.json({ status: 'ok', message: 'Compte débité.', solde: nouveauSolde });
+    return res.status(200).json({ status: 'ok', message: 'Compte débité.', solde: nouveauSolde });
   } catch (err) {
     console.error('Erreur débit:', err);
-    return res.status(500).json({ status: 'error', error: 'Erreur serveur.' });
+    return res.status(500).json({ status: 'error', error: 'Erreur serveur lors du débit.' });
   }
 });
 
-module.exports = router;
-
+app.use(router);
 
 // Démarrage serveur
 app.listen(port, '0.0.0.0', () => {
