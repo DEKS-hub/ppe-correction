@@ -359,6 +359,79 @@ router.post('/api/admin/debit', async (req, res) => {
 });
 
 app.use(router);
+// Nouveau Middleware pour vérifier le token JWT pour n'importe quel utilisateur
+const authenticateUser = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ status: 'error', error: 'Accès non autorisé : Token manquant.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        // Stocke l'email de l'utilisateur décodé dans req.user pour un usage ultérieur
+        req.user = decoded;
+        next(); // Le token est valide, on passe au prochain middleware/gestionnaire de route
+    } catch (err) {
+        return res.status(403).json({ status: 'error', error: 'Accès non autorisé : Token invalide ou expiré.' });
+    }
+};
+
+
+
+// NOUVELLE ROUTE : Récupérer le répertoire des autres utilisateurs (pour les transactions)
+router.get('/api/users/recipients', authenticateUser, async (req, res) => {
+    try {
+        // L'email de l'utilisateur qui fait la requête est dans req.user.email
+        const requestingUserEmail = req.user.email;
+
+        // Récupérer l'ID de l'utilisateur qui fait la requête
+        const [requestingUserRows] = await db.query("SELECT id FROM users WHERE email = ?", [requestingUserEmail]);
+        if (requestingUserRows.length === 0) {
+            return res.status(404).json({ status: 'error', error: 'Utilisateur demandeur non trouvé.' });
+        }
+        const requestingUserId = requestingUserRows[0].id;
+
+        // Récupérer tous les utilisateurs SAUF l'utilisateur qui fait la requête
+        const [recipients] = await db.query(
+            `SELECT id, name, email, mobile
+             FROM users
+             WHERE id != ?
+             ORDER BY name ASC`,
+            [requestingUserId]
+        );
+
+        res.json({ status: "ok", data: recipients });
+    } catch (err) {
+        console.error("Erreur lors de la récupération du répertoire des destinataires :", err);
+        res.status(500).json({ status: 'error', error: 'Erreur serveur lors de la récupération du répertoire.' });
+    }
+});
+// scan.controller.js
+router.post('/api/scan', async (req, res) => {
+  const { receiverPhone } = req.body;
+
+  if (!receiverPhone) {
+    return res.status(400).json({ status: 'error', message: 'Numéro manquant.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT id, nom, prenom, solde FROM utilisateurs WHERE telephone = ?',
+      [receiverPhone]
+    );
+
+    if (rows.length === 0) {
+  
+    return res.status(404).json({ status: 'error', message: 'Utilisateur non trouvé.' });
+    }
+
+    return res.status(200).json({ status: 'success', data: rows[0] });
+  } catch (error) {
+    return res.status(500).json({ status: 'error', message: 'Erreur serveur.' });
+  }
+});
 
 // Démarrage serveur
 app.listen(port, '0.0.0.0', () => {

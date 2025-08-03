@@ -8,6 +8,9 @@ import HomeScreen from './mon-app/screens/HomeScreen';
 import TransferScreen from './mon-app/screens/TransferScreen';
 import PaymentScreen from './mon-app/screens/PaymentScreen';
 import AdminScreen from './mon-app/screens/AdminScreen';
+import Repertoire from './mon-app/screens/Repertoire';  
+import QrScannerScreen from './mon-app/screens/QrScannerScreen';  // Import the QrScannerScreen
+// Assurez-vous que le chemin est correct
 
 
 
@@ -23,6 +26,8 @@ export default function App() {
         <Stack.Screen name="payment" component={PaymentScreen} />
         <Stack.Screen name="Transfer" component={TransferScreen} />
         <Stack.Screen name="AdminScreen" component={AdminScreen} />
+        <Stack.Screen name="Repertoire" component={Repertoire} />
+        <Stack.Screen name="QrScanner" component={QrScannerScreen} /> 
         {/* Add more screens as needed */}
       </Stack.Navigator>
     </NavigationContainer>

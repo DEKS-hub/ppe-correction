@@ -487,8 +487,7 @@ const refreshAll = async () => {
             </View>
             <Text style={styles.menuText}>Paiement</Text>
           </TouchableOpacity>
-        </View>
-        <TouchableOpacity
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('QrScanner')}
           >
@@ -497,6 +496,8 @@ const refreshAll = async () => {
             </View>
             <Text style={styles.menuText}>Scanner QR</Text>
         </TouchableOpacity>
+        </View>
+        
 
 
         <Text style={styles.sectionTitle}>Transactions récentes</Text>

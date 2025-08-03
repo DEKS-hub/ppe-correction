@@ -35,6 +35,13 @@ const TransferScreen = ({ navigation, route }) => {
       setIsRecipientFixed(true); // bloque la modification du numéro
     }
   }, [route.params]);
+  useEffect(() => {
+  if (route.params?.recipient) {
+    setRecipient(route.params.recipient);
+    setIsRecipientFixed(false); // Permet de modifier si besoin
+  }
+}, [route.params?.recipient]);
+
 
   const handleTransfer = async () => {
     if (!amount || !recipient) {
@@ -100,14 +107,19 @@ const TransferScreen = ({ navigation, route }) => {
           onChangeText={setAmount}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Numéro du destinataire"
-          keyboardType="phone-pad"
-          value={recipient}
-          onChangeText={setRecipient}
-          editable={!isRecipientFixed} // bloque si reçu par QR
-        />
+       <View style={styles.inputRow}>
+      <TextInput
+        style={styles.inputFlex}
+        placeholder="Numéro ou email du destinataire"
+        keyboardType="default"
+        value={recipient}
+        onChangeText={setRecipient}
+        editable={!isRecipientFixed}
+      />
+      <TouchableOpacity onPress={() => navigation.navigate('Repertoire')}>
+        <Ionicons name="person-add-outline" size={26} color={COLORS.primary} />
+      </TouchableOpacity>
+      </View>
 
         <TouchableOpacity
           style={[styles.button, loading && { opacity: 0.7 }]}
@@ -171,6 +183,25 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  inputRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: COLORS.inputBG,
+  borderColor: COLORS.inputBorder,
+  borderWidth: 1,
+  borderRadius: 10,
+  paddingHorizontal: 14,
+  marginBottom: 16,
+},
+inputFlex: {
+  flex: 1,
+  paddingVertical: 12,
+  fontSize: 16,
+  color: '#333',
+},
+  icon: {
+    marginLeft: 10,
   },
 });
 
