@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import IP_ADDRESS from './ipConfig'	;
+import { Modal } from 'react-native';
 const COLORS = {
   primary: '#4B3FF1',
   white: '#fff',
@@ -208,7 +209,7 @@ const HeaderBar = ({ onProfilePress, onSettingsPress }) => (
     </TouchableOpacity>
   </View>
 );
-const TransactionItem = ({ t }) => (
+const TransactionItem = ({ t, userId }) => (
   <View style={styles.transaction}>
     <View style={styles.transactionLeft}>
       <View style={[
@@ -221,7 +222,7 @@ const TransactionItem = ({ t }) => (
       </View>
       <View>
         <Text style={styles.transactionType}>
-          {t.type === 'transfer' ? 'Transfert' : 'Paiement'}
+          {t.sender_id.toString() === userId ? 'Envoi' : 'Réception'}
         </Text>
         <Text style={styles.transactionDate}>
           {formatDate(t.created_at)}
@@ -232,10 +233,11 @@ const TransactionItem = ({ t }) => (
       styles.transactionAmount,
       { color: t.amount < 0 ? COLORS.negative : COLORS.positive }
     ]}>
-      {`${t.amount < 0 ? '' : '+'}${t.amount.toLocaleString()} F`}
+      {`${t.amount.toLocaleString()} F`}
     </Text>
   </View>
 );
+
 
 
 const UserProfileModal = ({ visible, onClose }) =>
@@ -283,6 +285,13 @@ const HomeScreen = () => {
   const [qrCodeError, setQrCodeError] = useState(null); // Pour les erreurs de chargement du QR Code
   const [solde, setSolde] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filterType, setFilterType] = useState('all'); 
+
+
+
+
+
 
 
 
@@ -437,6 +446,14 @@ const refreshAll = async () => {
   }
 };
 
+const filteredTransactions = transactions.filter(t => {
+  if (filterType === 'all') return true;
+  if(filterType === 'sent') return t.type === 'transfer';
+  if(filterType === 'received') return t.type === 'payment';
+});
+
+
+
 
 
 
@@ -497,17 +514,94 @@ const refreshAll = async () => {
             <Text style={styles.menuText}>Scanner QR</Text>
         </TouchableOpacity>
         </View>
-        
+        <TouchableOpacity
+  style={{
+    marginHorizontal: 24,
+    marginBottom: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  }}
+  onPress={() => setShowFilterModal(true)}
+>
+  <Text style={{ color: 'white', fontWeight: 'bold' }}>Filtrer</Text>
+</TouchableOpacity>
+
+{/* Titre des transactions */}
+<Text style={styles.sectionTitle}>Transactions récentes</Text>
+
+{/* Liste filtrée */}
+<View style={styles.transactions}>
+  {filteredTransactions.map(t => (
+    <TransactionItem key={t.id} t={t} userId={userId} />
+  ))}
+</View>
+
+{/* Modal du filtre */}
+<Modal
+  visible={showFilterModal}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setShowFilterModal(false)}
+>
+  <View style={{
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}>
+    <View style={{
+      width: 280,
+      backgroundColor: 'white',
+      borderRadius: 12,
+      padding: 20,
+      alignItems: 'center',
+    }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Filtrer les transactions</Text>
+
+      {['all', 'sent', 'received'].map(type => (
+  <TouchableOpacity
+    key={type}
+    style={{
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      backgroundColor: filterType === type ? COLORS.primary : '#eee',
+      borderRadius: 10,
+      marginBottom: 12,
+      width: '100%',
+    }}
+    onPress={() => setFilterType(type)}
+  >
+    <Text style={{
+      color: filterType === type ? 'white' : '#333',
+      fontWeight: '600',
+      textAlign: 'center',
+    }}>
+      {type === 'all' ? 'Tout' : type === 'sent' ? 'Envois' : 'Réceptions'}
+    </Text>
+  </TouchableOpacity>
+))}
 
 
-        <Text style={styles.sectionTitle}>Transactions récentes</Text>
-        <View style={styles.transactions}>
-          {transactions.map(t => (
-            <TransactionItem key={t.id} t={t} />
-          ))}
-        </View>
+      <TouchableOpacity
+        onPress={() => setShowFilterModal(false)}
+        style={{
+          marginTop: 10,
+          backgroundColor: COLORS.transfer,
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          borderRadius: 10,
+          width: '100%',
+        }}
+      >
+        <Text style={{ textAlign: 'center', color: COLORS.primary, fontWeight: 'bold' }}>Fermer</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
       </ScrollView>
-
       <UserProfileModal visible={showProfile} onClose={() => setShowProfile(false)} />
       <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
     </View>

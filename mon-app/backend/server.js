@@ -166,30 +166,45 @@ app.get('/api/qrcode', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
-// Récupérer l'historique des transactions avec détails utilisateur
+// Récupérer l'historique des transactions avec filtre par date et limitation par défaut
 app.get('/api/historique', async (req, res) => {
   const userId = req.query.user_id;
+  const startDate = req.query.start_date;
+
   if (!userId) return res.status(400).json({ error: 'ID utilisateur requis' });
 
   try {
-    const [rows] = await db.query(
-      `SELECT 
-         t.id,
-         t.sender_id,
-         s.name AS sender_name,
-         t.receiver_id,
-         r.name AS receiver_name,
-         t.amount,
-         t.status,
-         t.transaction_type,
-         t.created_at
-       FROM transactions t
-       LEFT JOIN users s ON t.sender_id = s.id
-       LEFT JOIN users r ON t.receiver_id = r.id
-       WHERE t.sender_id = ? OR t.receiver_id = ?
-       ORDER BY t.created_at DESC`,
-      [userId, userId]
-    );
+    let query = `
+      SELECT 
+        t.id,
+        t.sender_id,
+        s.name AS sender_name,
+        t.receiver_id,
+        r.name AS receiver_name,
+        t.amount,
+        t.status,
+        t.transaction_type,
+        t.created_at
+      FROM transactions t
+      LEFT JOIN users s ON t.sender_id = s.id
+      LEFT JOIN users r ON t.receiver_id = r.id
+      WHERE (t.sender_id = ? OR t.receiver_id = ?)
+    `;
+
+    const params = [userId, userId];
+
+    if (startDate) {
+      query += ` AND DATE(t.created_at) >= ?`;
+      params.push(startDate);
+    }
+
+    query += ` ORDER BY t.created_at DESC`;
+
+    if (!startDate) {
+      query += ` LIMIT 10`;
+    }
+
+    const [rows] = await db.query(query, params);
 
     res.json({ status: "ok", data: rows });
   } catch (err) {
@@ -197,7 +212,6 @@ app.get('/api/historique', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
-
 
 // Récupérer le solde d'un utilisateur
 app.get('/api/solde/:userId', async (req, res) => {
@@ -432,6 +446,20 @@ router.post('/api/scan', async (req, res) => {
     return res.status(500).json({ status: 'error', message: 'Erreur serveur.' });
   }
 });
+
+app.get('/transactions/all', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT sender_email, receiver_email, amount, date FROM transactions ORDER BY date DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
 
 // Démarrage serveur
 app.listen(port, '0.0.0.0', () => {

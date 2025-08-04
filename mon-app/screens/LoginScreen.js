@@ -51,13 +51,17 @@ export default function LoginScreen() {
         }
 
         // Redirection selon userType, tolérance casse
-        if (userType === 'Admin') {
-          console.log("TEST navigation vers AdminScreen");
-          navigation.navigate('AdminScreen'); // vérifie que ce nom correspond à ton écran admin
-        } else {
-          console.log("TEST navigation vers Home");
-          navigation.navigate('Home');
-        }
+      if (userType === 'SA') {
+        console.log("TEST navigation vers SuperAdminScreen");
+        navigation.navigate('SuperAdminScreen'); // assure-toi que ce nom d'écran existe dans ta navigation
+      } else if (userType === 'Admin') {
+        console.log("TEST navigation vers AdminScreen");
+        navigation.navigate('AdminScreen');
+      } else {
+        console.log("TEST navigation vers Home");
+        navigation.navigate('Home');
+      }
+
       } else {
         Alert.alert('Erreur', result.data || 'Identifiant ou mot de passe incorrect.');
       }

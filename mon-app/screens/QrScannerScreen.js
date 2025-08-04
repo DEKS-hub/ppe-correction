@@ -1,19 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Platform, Linking } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native';
 import { useCameraPermissions, CameraView } from 'expo-camera';
 import { useState } from 'react';
 
 export default function QrScannerScreen({ navigation }) {
 	const [permission, requestPermission] = useCameraPermissions();
 	const isPermissionGranted = permission?.granted;
-	const [dataScanned, setDataScanned] = useState(null);
+	const [scanned, setScanned] = useState(false);
 
 	const handleQrData = (data) => {
-		if (data.startsWith('http') || data.startsWith('https')) {
-			Linking.openURL(data).catch(err => console.error('Erreur ouverture URL:', err));
-		} else {
-			setDataScanned(data);
-			// 🔁 tu peux ici ajouter un traitement (ex: rediriger vers une page de paiement)
+		if (!scanned) {
+			setScanned(true); // pour éviter les scans multiples
+
+			// Redirige vers l'écran de transfert avec les données du receveur
+			navigation.navigate('Transfer', { receiverPhone: data });
 		}
 	};
 
@@ -27,26 +27,13 @@ export default function QrScannerScreen({ navigation }) {
 		);
 	}
 
-	if (dataScanned) {
-		return (
-			<SafeAreaView style={styles.container}>
-				<Text>QR Code scanné : {dataScanned}</Text>
-				<TouchableOpacity onPress={() => setDataScanned(null)} style={styles.button}>
-					<Text style={styles.buttonText}>Scanner un autre QR Code</Text>
-				</TouchableOpacity>
-			</SafeAreaView>
-		);
-	}
-
 	return (
 		<SafeAreaView style={StyleSheet.absoluteFillObject}>
 			{Platform.OS === 'android' && <StatusBar hidden />}
 			<CameraView
 				style={StyleSheet.absoluteFillObject}
 				facing='back'
-				onBarcodeScanned={({ data }) => {
-					if (data) handleQrData(data);
-				}}
+				onBarcodeScanned={({ data }) => handleQrData(data)}
 			/>
 
 			<View style={styles.scanInstructionsContainer}>

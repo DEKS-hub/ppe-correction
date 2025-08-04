@@ -30,17 +30,15 @@ const TransferScreen = ({ navigation, route }) => {
   const [isRecipientFixed, setIsRecipientFixed] = useState(false);
 
   useEffect(() => {
-    if (route.params?.receiverPhone) {
-      setRecipient(route.params.receiverPhone);
-      setIsRecipientFixed(true); // bloque la modification du numéro
-    }
-  }, [route.params]);
-  useEffect(() => {
-  if (route.params?.recipient) {
+  if (route.params?.receiverPhone) {
+    setRecipient(route.params.receiverPhone);
+    setIsRecipientFixed(true); // Champ non modifiable après scan QR
+  } else if (route.params?.recipient) {
     setRecipient(route.params.recipient);
-    setIsRecipientFixed(false); // Permet de modifier si besoin
+    setIsRecipientFixed(false); // Champ modifiable
   }
-}, [route.params?.recipient]);
+}, [route.params]);
+
 
 
   const handleTransfer = async () => {
