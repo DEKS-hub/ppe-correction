@@ -10,7 +10,12 @@ import PaymentScreen from './mon-app/screens/PaymentScreen';
 import AdminScreen from './mon-app/screens/AdminScreen';
 import Repertoire from './mon-app/screens/Repertoire';  
 import QrScannerScreen from './mon-app/screens/QrScannerScreen';
-import SuperAdminScreen from './mon-app/screens/SuperAdminScreen'; // Assurez-vous que ce chemin est correct
+import SuperAdminScreen from './mon-app/screens/SuperAdminScreen';
+import TransactionsHistory from './mon-app/screens/TransactionsHistory';
+import UserManagementScreen from './mon-app/screens/UserManagementScreen'; // Assurez-vous que ce chemin est correct
+import EditUserScreen from './mon-app/screens/EditUserScreen'; // Assurez-vous que le chemin est correct
+import AddUserScreen from './mon-app/screens/AddUserScreen'; // Assurez-vous que le
+
 // Assurez-vous que le chemin est correct
 
 
@@ -30,7 +35,10 @@ export default function App() {
         <Stack.Screen name="Repertoire" component={Repertoire} />
         <Stack.Screen name="QrScanner" component={QrScannerScreen} /> 
         <Stack.Screen name="SuperAdminScreen" component={SuperAdminScreen} />
-        {/* Add more screens as needed */}
+        <Stack.Screen name="TransactionsHistory" component={TransactionsHistory} />
+        <Stack.Screen name="UserManagementScreen" component={UserManagementScreen} /> 
+        <Stack.Screen name="EditUserScreen" component={EditUserScreen} />
+        <Stack.Screen name="AddUserScreen" component={AddUserScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

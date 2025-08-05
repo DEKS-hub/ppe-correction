@@ -10,6 +10,8 @@ const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 
 
+
+
 app.use(express.json());
 app.use(cors());
 
@@ -447,20 +449,54 @@ router.post('/api/scan', async (req, res) => {
   }
 });
 
-app.get('/transactions/all', async (req, res) => {
+
+
+router.get('/api/transactions', async (req, res) => {
   try {
-    const [rows] = await db.query(
-      `SELECT sender_email, receiver_email, amount, date FROM transactions ORDER BY date DESC`
-    );
+    const [rows] = await db.query(`
+      SELECT 
+        id,
+        sender_id,
+        receiver_id,
+        amount,
+        status,
+        transaction_type,
+        type,
+        created_at
+      FROM transactions
+    `);
+
     res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur serveur' });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des transactions :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+router.get('/api/users', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM users');
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur récupération utilisateurs:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// DELETE /api/users/:id - supprime un utilisateur par id
+router.delete('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM users WHERE id = ?', [id]);
+    res.json({ message: 'Utilisateur supprimé' });
+  } catch (error) {
+    console.error('Erreur suppression utilisateur:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 
 
-
+app.use(router);
 // Démarrage serveur
 app.listen(port, '0.0.0.0', () => {
   console.log(`Serveur backend en écoute sur http://localhost:${port}`);

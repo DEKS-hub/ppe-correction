@@ -8,7 +8,7 @@ const SuperAdminScreen = ({ navigation }) => {
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Interface SuperAdmin</Text>
 
-      <TouchableOpacity onPress={() => navigation.navigate('UserManagement')} activeOpacity={0.8}>
+      <TouchableOpacity onPress={() => navigation.navigate('UserManagementScreen')} activeOpacity={0.8}>
         <LinearGradient colors={['#0052D4', '#4364F7', '#6FB1FC']} style={styles.button}>
           <Ionicons name="people-outline" size={26} color="#fff" />
           <Text style={styles.buttonText}>Gestion des utilisateurs</Text>
