@@ -535,7 +535,41 @@ router.get('/users/:id', async (req, res) => {
   }
 });
 
+// Récupérer infos utilisateur par id
+router.get('/api/user/:id', async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const [rows] = await db.query('SELECT id, name, email, mobile FROM users WHERE id = ?', [userId]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+// Mettre à jour les infos utilisateur
+router.put('/api/user/:id', async (req, res) => {
+  const userId = req.params.id;
+  const { nom, email, telephone } = req.body;
 
+  if (!nom || !email || !telephone) {
+    return res.status(400).json({ error: 'Champs obligatoires manquants' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'UPDATE users SET name = ?, email = ?, mobile = ? WHERE id = ?',
+      [nom, email, telephone, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    res.json({ message: 'Profil mis à jour avec succès' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 
 
 app.use(router);

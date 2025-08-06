@@ -9,170 +9,201 @@ import { Modal } from 'react-native';
 
 const COLORS = {
   primary: '#4B3FF1',
+  primaryLight: '#6979FF',
   white: '#fff',
-  bg: '#F7F8FA',
-  transfer: '#E6E9FF',
+  bg: '#F0F3FF',
+  transfer: '#D1D9FF',
   payment: '#FFE6E6',
   positive: '#4BB543',
   negative: '#F15B3F',
+  textDark: '#222',
+  textLight: '#666',
+  shadowLight: 'rgba(75, 63, 241, 0.2)',
+  shadowStrong: 'rgba(75, 63, 241, 0.3)',
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg, paddingTop: 50 },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    paddingTop: 50,
+  },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 18,
+    paddingHorizontal: 20,
     paddingTop: 48,
     paddingBottom: 12,
     backgroundColor: COLORS.bg,
+    shadowColor: COLORS.shadowStrong,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '900',
     color: COLORS.primary,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   headerIconBtn: {
-    padding: 4,
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: COLORS.white,
+    shadowColor: COLORS.shadowLight,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
   },
   balanceContainer: {
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    paddingVertical: 28,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    marginBottom: 18,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingVertical: 32,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+    marginBottom: 22,
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    elevation: 10,
   },
   balanceLabel: {
-    color: '#fff',
-    fontSize: 15,
-    opacity: 0.8,
-    marginBottom: 4,
+    color: COLORS.white,
+    fontSize: 16,
+    opacity: 0.9,
+    marginBottom: 6,
+    fontWeight: '600',
   },
   balanceText: {
-    fontSize: 34,
-    color: '#fff',
-    fontWeight: 'bold',
-    marginBottom: 8,
-    letterSpacing: 1,
+    fontSize: 42,
+    color: COLORS.white,
+    fontWeight: '900',
+    marginBottom: 12,
+    letterSpacing: 1.5,
   },
-  qrCode: { // Style pour le conteneur du QR Code
-    width: 90,
-    height: 90,
-    marginVertical: 10,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#fff',
-    backgroundColor: '#fff', // Fond blanc pour le conteneur, utile si le QR est transparent
+  qrCode: {
+    width: 110,
+    height: 110,
+    marginVertical: 16,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: COLORS.white,
+    backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    elevation: 8,
   },
   scanText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginTop: 4,
-    fontSize: 15,
-    letterSpacing: 0.5,
+    color: COLORS.white,
+    fontWeight: '700',
+    marginTop: 8,
+    fontSize: 17,
+    letterSpacing: 0.7,
+    textShadowColor: 'rgba(0,0,0,0.15)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   menuContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 22,
-    backgroundColor: '#fff',
-    marginHorizontal: 18,
-    borderRadius: 18,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-    marginBottom: 16,
+    paddingVertical: 26,
+    backgroundColor: COLORS.white,
+    marginHorizontal: 20,
+    borderRadius: 22,
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+    marginBottom: 22,
   },
   menuItem: {
     alignItems: 'center',
-    width: 70,
+    width: 80,
   },
   menuIconCircle: {
     backgroundColor: COLORS.transfer,
-    borderRadius: 30,
-    width: 52,
-    height: 52,
+    borderRadius: 38,
+    width: 64,
+    height: 64,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 8,
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    elevation: 5,
   },
   menuText: {
-    fontSize: 13,
-    color: '#333',
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#333',
-    marginLeft: 24,
-    marginBottom: 8,
-    marginTop: 6,
+    fontSize: 14,
+    color: COLORS.textDark,
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
+  sectionTitle: {
+    fontSize: 19,
+    fontWeight: '900',
+    color: COLORS.textDark,
+    marginLeft: 26,
+    marginBottom: 12,
+    marginTop: 10,
+    letterSpacing: 0.4,
+  },
   transactions: {
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    paddingHorizontal: 20,
+    marginBottom: 14,
   },
   transaction: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: COLORS.white,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    shadowColor: COLORS.shadowLight,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.11,
+    shadowRadius: 14,
+    elevation: 5,
   },
   transactionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   transactionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   transactionType: {
-    fontWeight: 'bold',
-    fontSize: 15,
-    color: '#333',
-    marginBottom: 2,
+    fontWeight: '900',
+    fontSize: 16,
+    color: COLORS.textDark,
+    marginBottom: 3,
   },
   transactionDate: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 13,
+    color: COLORS.textLight,
+    fontWeight: '600',
   },
   transactionAmount: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    letterSpacing: 0.5,
+    fontWeight: '900',
+    fontSize: 18,
+    letterSpacing: 0.6,
   },
   profileModal: {
     position: 'absolute',
@@ -180,23 +211,85 @@ const styles = StyleSheet.create({
     left: 30,
     right: 30,
     backgroundColor: COLORS.white,
-    borderRadius: 18,
-    padding: 24,
+    borderRadius: 22,
+    padding: 28,
     alignItems: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 15,
     zIndex: 100,
   },
   closeModalBtn: {
-    marginTop: 10,
-    padding: 8,
-    borderRadius: 8,
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 14,
     backgroundColor: COLORS.transfer,
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  filterBtn: {
+    marginHorizontal: 26,
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    backgroundColor: COLORS.primary,
+    borderRadius: 26,
+    alignSelf: 'flex-start',
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  filterBtnText: {
+    color: COLORS.white,
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  filterModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterModalContainer: {
+    width: 300,
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 26,
+    alignItems: 'center',
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    elevation: 15,
+  },
+  filterOptionBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    marginBottom: 16,
+    width: '100%',
+  },
+  filterOptionBtnActive: {
+    backgroundColor: COLORS.primary,
+  },
+  filterOptionText: {
+    textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  filterOptionTextActive: {
+    color: COLORS.white,
   },
 });
+
 
 // Composants secondaires
 const HeaderBar = ({ onProfilePress, onSettingsPress }) => (
@@ -250,18 +343,19 @@ const TransactionItem = ({ t, userId, navigation }) => (
 
 
 
+const UserProfileModal = ({ visible }) => {
+  const navigation = useNavigation();
 
-const UserProfileModal = ({ visible, onClose }) =>
-  visible ? (
-    <View style={styles.profileModal}>
-      <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>Profil utilisateur</Text>
-      <Text>Nom: DEKOUA Bienvenu</Text>
-      <Text>Email: bienvenudekoua@email.com</Text>
-      <TouchableOpacity onPress={onClose} style={styles.closeModalBtn}>
-        <Text style={{ color: COLORS.primary, fontWeight: 'bold', marginTop: 16 }}>Fermer</Text>
-      </TouchableOpacity>
-    </View>
-  ) : null;
+  useEffect(() => {
+    if (visible) {
+      navigation.navigate('Profile');
+    }
+  }, [visible]);
+
+  return null; // Pas besoin d'afficher quoi que ce soit ici
+};
+
+
 
 const SettingsModal = ({ visible, onClose }) =>
   visible ? (
@@ -483,9 +577,7 @@ const filteredTransactions = transactions.filter(t => {
             {solde !== null ? `${parseFloat(solde).toLocaleString()} F` : 'Chargement...'}
           </Text>
           
-          <TouchableOpacity onPress={refreshAll} style={{ marginTop: 10, backgroundColor: COLORS.white, padding: 8, borderRadius: 10 }}>
-          <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}></Text>
-          </TouchableOpacity>
+          
 
 
           <View style={{ alignItems: 'center' }}>
