@@ -6,6 +6,7 @@ import QRCode from 'react-native-qrcode-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import IP_ADDRESS from './ipConfig'	;
 import { Modal } from 'react-native';
+
 const COLORS = {
   primary: '#4B3FF1',
   white: '#fff',
@@ -209,34 +210,44 @@ const HeaderBar = ({ onProfilePress, onSettingsPress }) => (
     </TouchableOpacity>
   </View>
 );
-const TransactionItem = ({ t, userId }) => (
-  <View style={styles.transaction}>
+
+
+const TransactionItem = ({ t, userId, navigation }) => (
+  <TouchableOpacity
+    style={styles.transaction}
+    onPress={() => navigation.navigate('TransactionDetail', { transaction: t })}
+  >
     <View style={styles.transactionLeft}>
-      <View style={[
-        styles.transactionIcon,
-        { backgroundColor: t.type === 'transfer' ? COLORS.transfer : COLORS.payment }
-      ]}>
-        {t.type === 'transfer'
-          ? <Ionicons name="swap-horizontal" size={20} color={COLORS.primary} />
-          : <MaterialIcons name="payment" size={20} color={COLORS.negative} />}
+      <View
+        style={[
+          styles.transactionIcon,
+          { backgroundColor: t.type === 'transfer' ? COLORS.transfer : COLORS.payment },
+        ]}
+      >
+        {t.type === 'transfer' ? (
+          <Ionicons name="swap-horizontal" size={20} color={COLORS.primary} />
+        ) : (
+          <MaterialIcons name="payment" size={20} color={COLORS.negative} />
+        )}
       </View>
       <View>
         <Text style={styles.transactionType}>
           {t.sender_id.toString() === userId ? 'Envoi' : 'Réception'}
         </Text>
-        <Text style={styles.transactionDate}>
-          {formatDate(t.created_at)}
-        </Text>
+        <Text style={styles.transactionDate}>{formatDate(t.created_at)}</Text>
       </View>
     </View>
-    <Text style={[
-      styles.transactionAmount,
-      { color: t.amount < 0 ? COLORS.negative : COLORS.positive }
-    ]}>
+    <Text
+      style={[
+        styles.transactionAmount,
+        { color: t.amount < 0 ? COLORS.negative : COLORS.positive },
+      ]}
+    >
       {`${t.amount.toLocaleString()} F`}
     </Text>
-  </View>
+  </TouchableOpacity>
 );
+
 
 
 
@@ -534,10 +545,11 @@ const filteredTransactions = transactions.filter(t => {
 
 {/* Liste filtrée */}
 <View style={styles.transactions}>
-  {filteredTransactions.map(t => (
-    <TransactionItem key={t.id} t={t} userId={userId} />
+  {filteredTransactions.map((t) => (
+    <TransactionItem key={t.id} t={t} userId={userId} navigation={navigation} />
   ))}
 </View>
+
 
 {/* Modal du filtre */}
 <Modal

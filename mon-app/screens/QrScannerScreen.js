@@ -8,14 +8,29 @@ export default function QrScannerScreen({ navigation }) {
 	const isPermissionGranted = permission?.granted;
 	const [scanned, setScanned] = useState(false);
 
-	const handleQrData = (data) => {
-		if (!scanned) {
-			setScanned(true); // pour éviter les scans multiples
+	const handleQrData = async (data) => {
+ 		 if (scanned) return;
 
-			// Redirige vers l'écran de transfert avec les données du receveur
-			navigation.navigate('Transfer', { receiverPhone: data });
-		}
-	};
+ 		 setScanned(true);
+
+  		try {
+    const response = await fetch(`${IP_ADDRESS}/users/by-qrcode/${data}`);
+    const user = await response.json();
+
+    if (!response.ok) {
+      throw new Error(user.message || 'Utilisateur non trouvé');
+    }
+
+    // Envoie le vrai numéro à TransferScreen
+    navigation.navigate('Transfer', { receiverPhone: user.numero });
+
+  } catch (error) {
+    console.error(error);
+    alert('Erreur : ' + error.message);
+    setScanned(false); // Permet de re-scanner
+  }
+};
+
 
 	if (!isPermissionGranted) {
 		return (

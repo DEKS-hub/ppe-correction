@@ -14,7 +14,8 @@ import SuperAdminScreen from './mon-app/screens/SuperAdminScreen';
 import TransactionsHistory from './mon-app/screens/TransactionsHistory';
 import UserManagementScreen from './mon-app/screens/UserManagementScreen'; // Assurez-vous que ce chemin est correct
 import EditUserScreen from './mon-app/screens/EditUserScreen'; // Assurez-vous que le chemin est correct
-import AddUserScreen from './mon-app/screens/AddUserScreen'; // Assurez-vous que le
+import AddUserScreen from './mon-app/screens/AddUserScreen'; 
+import TransactionDetailScreen from './mon-app/screens/TransactionDetailScreen';
 
 // Assurez-vous que le chemin est correct
 
@@ -39,6 +40,7 @@ export default function App() {
         <Stack.Screen name="UserManagementScreen" component={UserManagementScreen} /> 
         <Stack.Screen name="EditUserScreen" component={EditUserScreen} />
         <Stack.Screen name="AddUserScreen" component={AddUserScreen} />
+        <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -496,6 +496,48 @@ router.delete('/api/users/:id', async (req, res) => {
 });
 
 
+router.get('/users/by-qrcode/:code', async (req, res) => {
+  const code = req.params.code;
+  try {
+    const [rows] = await db.query(
+      'SELECT mobile FROM users WHERE qrcode = ?',
+      [code]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    res.json(rows[0]); // contient { numero: "..." }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+router.get('/users/:id', async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const [rows] = await db.query(
+      'SELECT mobile FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    res.json({ mobile: rows[0].mobile });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+
+
+
 app.use(router);
 // Démarrage serveur
 app.listen(port, '0.0.0.0', () => {
