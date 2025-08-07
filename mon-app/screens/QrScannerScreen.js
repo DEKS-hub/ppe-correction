@@ -2,20 +2,36 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native';
 import { useCameraPermissions, CameraView } from 'expo-camera';
 import { useState } from 'react';
+import IP_ADDRESS from './ipConfig';
 
 export default function QrScannerScreen({ navigation }) {
 	const [permission, requestPermission] = useCameraPermissions();
 	const isPermissionGranted = permission?.granted;
 	const [scanned, setScanned] = useState(false);
 
-	const handleQrData = (data) => {
-		if (!scanned) {
-			setScanned(true); // pour éviter les scans multiples
+	const handleQrData = async (data) => {
+ 		 if (scanned) return;
+		 console.log("QR Code scanné :", data);
+ 		 setScanned(true);
 
-			// Redirige vers l'écran de transfert avec les données du receveur
-			navigation.navigate('Transfer', { receiverPhone: data });
-		}
-	};
+  		try {
+    const response = await fetch(`${IP_ADDRESS}/users/by-qrcode/${data}`);
+    const user = await response.json();
+
+    if (!response.ok) {
+      throw new Error(user.message || 'Utilisateur non trouvé');
+    }
+
+    // Envoie le vrai numéro à TransferScreen
+    navigation.navigate('Transfer', { receiverPhone: user.mobile });
+
+  } catch (error) {
+    console.error(error);
+    alert('Erreur : ' + error.message);
+    setScanned(false); // Permet de re-scanner
+  }
+};
+
 
 	if (!isPermissionGranted) {
 		return (

@@ -164,7 +164,7 @@ export default function RegisterScreen({ navigation }) {
         )}
 
         <View style={styles.action}>
-          <FontAwesome name="mobile" color="#420475" size={30} />
+          <FontAwesome name="mobile" color="#420475" size={8} />
           <TextInput
             placeholder="Numéro de téléphone"
             style={styles.input}

@@ -10,6 +10,8 @@ const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 
 
+
+
 app.use(express.json());
 app.use(cors());
 
@@ -446,20 +448,130 @@ router.post('/api/scan', async (req, res) => {
   }
 });
 
-app.get('/transactions/all', async (req, res) => {
+
+
+router.get('/api/transactions', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        id,
+        sender_id,
+        receiver_id,
+        amount,
+        status,
+        transaction_type,
+        type,
+        created_at
+      FROM transactions
+    `);
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des transactions :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+router.get('/api/users', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM users');
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur récupération utilisateurs:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// DELETE /api/users/:id - supprime un utilisateur par id
+router.delete('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM users WHERE id = ?', [id]);
+    res.json({ message: 'Utilisateur supprimé' });
+  } catch (error) {
+    console.error('Erreur suppression utilisateur:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+
+router.get('/users/by-qrcode/:code', async (req, res) => {
+  const code = req.params.code;
   try {
     const [rows] = await db.query(
-      `SELECT sender_email, receiver_email, amount, date FROM transactions ORDER BY date DESC`
+      'SELECT mobile FROM users WHERE qrcode = ?',
+      [code]
     );
-    res.json(rows);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    res.json(rows[0]); // contient { numero: "..." }
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+router.get('/users/:id', async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const [rows] = await db.query(
+      'SELECT mobile FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    res.json({ mobile: rows[0].mobile });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Récupérer infos utilisateur par id
+router.get('/api/user/:id', async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const [rows] = await db.query('SELECT id, name, email, mobile FROM users WHERE id = ?', [userId]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+// Mettre à jour les infos utilisateur
+router.put('/api/user/:id', async (req, res) => {
+  const userId = req.params.id;
+  const { nom, email, telephone } = req.body;
+
+  if (!nom || !email || !telephone) {
+    return res.status(400).json({ error: 'Champs obligatoires manquants' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'UPDATE users SET name = ?, email = ?, mobile = ? WHERE id = ?',
+      [nom, email, telephone, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    res.json({ message: 'Profil mis à jour avec succès' });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
 
-
+app.use(router);
 // Démarrage serveur
 app.listen(port, '0.0.0.0', () => {
   console.log(`Serveur backend en écoute sur http://localhost:${port}`);

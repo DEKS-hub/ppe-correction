@@ -51,6 +51,12 @@ const PaymentScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.card}>
+        <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}
+                  >
+                  <Ionicons name="arrow-back" size={28} color={COLORS.primary} />
+          </TouchableOpacity>
         <Text style={styles.title}>Payer une Facture</Text>
 
         <View style={styles.servicesContainer}>
