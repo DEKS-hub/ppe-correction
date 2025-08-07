@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native';
 import { useCameraPermissions, CameraView } from 'expo-camera';
 import { useState } from 'react';
+import IP_ADDRESS from './ipConfig';
 
 export default function QrScannerScreen({ navigation }) {
 	const [permission, requestPermission] = useCameraPermissions();
@@ -10,7 +11,7 @@ export default function QrScannerScreen({ navigation }) {
 
 	const handleQrData = async (data) => {
  		 if (scanned) return;
-
+		 console.log("QR Code scanné :", data);
  		 setScanned(true);
 
   		try {
@@ -22,7 +23,7 @@ export default function QrScannerScreen({ navigation }) {
     }
 
     // Envoie le vrai numéro à TransferScreen
-    navigation.navigate('Transfer', { receiverPhone: user.numero });
+    navigation.navigate('Transfer', { receiverPhone: user.mobile });
 
   } catch (error) {
     console.error(error);

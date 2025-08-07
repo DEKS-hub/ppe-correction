@@ -568,17 +568,22 @@ const filteredTransactions = transactions.filter(t => {
       <HeaderBar
         onProfilePress={() => setShowProfile(true)}
         onSettingsPress={() => setShowSettings(true)}
+        
       />
 
       <ScrollView>
         <View style={styles.balanceContainer}>
+          <TouchableOpacity onPress={refreshAll} style={{ marginTop: 10, backgroundColor: COLORS.white, padding: 8, borderRadius: 10 }}>
+          <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}>🔁</Text>
+          </TouchableOpacity>
+
           <Text style={styles.balanceLabel}>Votre solde</Text>
           <Text style={styles.balanceText}>
             {solde !== null ? `${parseFloat(solde).toLocaleString()} F` : 'Chargement...'}
           </Text>
           
           
-
+          
 
           <View style={{ alignItems: 'center' }}>
           {isLoadingQrCode ? (
