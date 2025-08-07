@@ -16,7 +16,7 @@ app.use(cors());
 const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: 'Dekoua',
+  password: '',
   database: 'ppe301',
   waitForConnections: true,
   connectionLimit: 10,
@@ -431,9 +431,8 @@ router.post('/api/scan', async (req, res) => {
   }
 
   try {
-    const [rows] = await db.promise().query(
-      'SELECT id, nom, prenom, solde FROM utilisateurs WHERE telephone = ?',
-      [receiverPhone]
+   const [[receiver]] = await conn.query("SELECT id FROM users WHERE qrcode = ?", [receiverPhone]
+
     );
 
     if (rows.length === 0) {

@@ -8,7 +8,8 @@ import HomeScreen from './mon-app/screens/HomeScreen';
 import TransferScreen from './mon-app/screens/TransferScreen';
 import PaymentScreen from './mon-app/screens/PaymentScreen';
 import AdminScreen from './mon-app/screens/AdminScreen';
-import Repertoire from './mon-app/screens/Repertoire';  
+import Repertoire from './mon-app/screens/Repertoire';
+import ContactsList from './mon-app/screens/ContacstList';  
 import QrScannerScreen from './mon-app/screens/QrScannerScreen';
 import SuperAdminScreen from './mon-app/screens/SuperAdminScreen'; // Assurez-vous que ce chemin est correct
 // Assurez-vous que le chemin est correct
@@ -28,6 +29,7 @@ export default function App() {
         <Stack.Screen name="Transfer" component={TransferScreen} />
         <Stack.Screen name="AdminScreen" component={AdminScreen} />
         <Stack.Screen name="Repertoire" component={Repertoire} />
+        <Stack.Screen name="ContactsList" component={ContactsList} />
         <Stack.Screen name="QrScanner" component={QrScannerScreen} /> 
         <Stack.Screen name="SuperAdminScreen" component={SuperAdminScreen} />
         {/* Add more screens as needed */}
