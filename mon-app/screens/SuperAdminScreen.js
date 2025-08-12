@@ -1,27 +1,35 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const SuperAdminScreen = ({ navigation }) => {
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <Text style={styles.title}>Interface SuperAdmin</Text>
 
-      <TouchableOpacity onPress={() => navigation.navigate('UserManagementScreen')} activeOpacity={0.8}>
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('UserManagementScreen')} 
+        activeOpacity={0.8}
+        style={styles.buttonWrapper}
+      >
         <LinearGradient colors={['#0052D4', '#4364F7', '#6FB1FC']} style={styles.button}>
           <Ionicons name="people-outline" size={26} color="#fff" />
           <Text style={styles.buttonText}>Gestion des utilisateurs</Text>
         </LinearGradient>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('TransactionsHistory')} activeOpacity={0.8}>
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('TransactionsHistory')} 
+        activeOpacity={0.8}
+        style={styles.buttonWrapper}
+      >
         <LinearGradient colors={['#FF416C', '#FF4B2B']} style={styles.button}>
           <Ionicons name="wallet-outline" size={26} color="#fff" />
           <Text style={styles.buttonText}>Historique des transactions</Text>
         </LinearGradient>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -29,11 +37,11 @@ export default SuperAdminScreen;
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 40,
-    paddingHorizontal: 25,
+    flex: 1,
     backgroundColor: '#f0f4f8',
-    flexGrow: 1,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',  // Centre verticalement
+    alignItems: 'center',      // Centre horizontalement
+    paddingHorizontal: 25,
   },
   title: {
     fontSize: 28,
@@ -42,6 +50,10 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     textAlign: 'center',
     letterSpacing: 1,
+  },
+  buttonWrapper: {
+    width: '100%',
+    maxWidth: 350,
   },
   button: {
     flexDirection: 'row',
