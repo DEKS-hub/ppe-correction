@@ -47,7 +47,8 @@
     "sequelize": "^6.37.7",
     "twilio": "^5.5.2",
     "undefined": "\\",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "expo-contacts": "~14.2.5"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

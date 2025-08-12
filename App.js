@@ -8,8 +8,9 @@ import HomeScreen from './mon-app/screens/HomeScreen';
 import TransferScreen from './mon-app/screens/TransferScreen';
 import PaymentScreen from './mon-app/screens/PaymentScreen';
 import AdminScreen from './mon-app/screens/AdminScreen';
+import AdminSettingsScreen from './mon-app/screens/AdminSettingsScreen';
 import Repertoire from './mon-app/screens/Repertoire';
-import ContactsList from './mon-app/screens/ContacstList';  
+import Contacts from './mon-app/screens/Contacts';  
 import QrScannerScreen from './mon-app/screens/QrScannerScreen';
 import SuperAdminScreen from './mon-app/screens/SuperAdminScreen';
 import TransactionsHistory from './mon-app/screens/TransactionsHistory';
@@ -35,8 +36,9 @@ export default function App() {
         <Stack.Screen name="payment" component={PaymentScreen} />
         <Stack.Screen name="Transfer" component={TransferScreen} />
         <Stack.Screen name="AdminScreen" component={AdminScreen} />
+        <Stack.Screen name="AdminSettingsScreen" component={AdminSettingsScreen} />
         <Stack.Screen name="Repertoire" component={Repertoire} />
-        <Stack.Screen name="ContactsList" component={ContactsList} />
+        <Stack.Screen name="Contacts" component={Contacts} />
         <Stack.Screen name="QrScanner" component={QrScannerScreen} /> 
         <Stack.Screen name="SuperAdminScreen" component={SuperAdminScreen} />
         <Stack.Screen name="TransactionsHistory" component={TransactionsHistory} />
@@ -44,7 +46,7 @@ export default function App() {
         <Stack.Screen name="EditUserScreen" component={EditUserScreen} />
         <Stack.Screen name="AddUserScreen" component={AddUserScreen} />
         <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

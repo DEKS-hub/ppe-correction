@@ -1,11 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import IP_ADDRESS from './ipConfig'; // Assurez-vous que ipConfig.js fournit la bonne adresse IP
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import IP_ADDRESS from './ipConfig';
 
 const AdminScreen = () => {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
+  const [solde, setSolde] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    const fetchAdminSolde = async () => {
+      try {
+        setLoading(true);
+        const adminId = await AsyncStorage.getItem('userId');
+        const res = await fetch(`${IP_ADDRESS}/api/user/${adminId}`);
+        const data = await res.json();
+        if (res.ok && data?.solde !== undefined) {
+          setSolde(data.solde);
+        } else {
+          console.warn('Impossible de récupérer le solde');
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération du solde :", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdminSolde();
+  }, []);
 
   const handleTransaction = async (type) => {
     if (!recipient || !amount) {
@@ -13,77 +38,83 @@ const AdminScreen = () => {
       return;
     }
 
-    // Validation de base pour le montant afin d'éviter d'envoyer des valeurs non numériques
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       Alert.alert("Erreur", "Le montant doit être un nombre positif.");
       return;
     }
 
-    setLoading(true);
+    setProcessing(true);
 
     try {
       const res = await fetch(`${IP_ADDRESS}/api/admin/${type}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipient, amount: parsedAmount }), // Utilisation du montant analysé
+        body: JSON.stringify({ recipient, amount: parsedAmount }),
       });
 
-      // Lire le corps de la réponse une seule fois, en tant que texte
       const responseText = await res.text();
 
-      // Vérifier si la réponse a été réussie (statut 200-299)
       if (!res.ok) {
         let errorMessage = `Erreur serveur (${res.status})`;
         try {
-          // Tenter d'analyser le texte en JSON
           const errorData = JSON.parse(responseText);
           errorMessage = errorData.error || errorMessage;
-        } catch (jsonParseError) {
-          // Si ce n'est pas du JSON, utiliser le texte brut
-          errorMessage = `Erreur inattendue: ${responseText.substring(0, 100)}... (Vérifiez la console du serveur)`;
+        } catch (e) {
+          errorMessage = `Erreur inconnue: ${responseText}`;
         }
-        Alert.alert("Erreur", errorMessage);
-        setLoading(false);
+        Alert.alert("Échec", errorMessage);
         return;
       }
 
-      // Si la réponse est OK, analyser le texte en JSON
       const data = JSON.parse(responseText);
 
       if (data.status === "ok") {
-        Alert.alert("Succès", `Compte ${type} avec succès. Nouveau solde: ${data.solde}`);
+        Alert.alert("Succès", `Compte ${type} avec succès. Nouveau solde: ${data.solde} F`);
+        setSolde(data.solde);
         setRecipient('');
         setAmount('');
       } else {
-        // Cela gère les cas où le serveur renvoie le statut 200 mais avec status: 'error' en JSON
         Alert.alert("Erreur", data.error || `Échec de la ${type}.`);
       }
     } catch (error) {
-      // Cela intercepte les erreurs réseau (par exemple, serveur inaccessible, IP_ADDRESS incorrecte)
-      console.error('Erreur réseau ou de récupération:', error);
-      Alert.alert("Erreur de connexion", `Impossible de se connecter au serveur. Vérifiez votre IP_ADDRESS et la disponibilité du serveur. Détails: ${error.message}`);
+      Alert.alert("Erreur", "Une erreur est survenue : " + error.message);
     } finally {
-      setLoading(false);
+      setProcessing(false);
     }
+  };
+
+  const handleCancel = () => {
+    setRecipient('');
+    setAmount('');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Gestion des comptes</Text>
+      <Text style={styles.title}>💼 Gestion des Comptes</Text>
+
+      <View style={styles.soldeBox}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#4B3FF1" />
+        ) : (
+          <>
+            <Text style={styles.soldeLabel}>Votre solde actuel</Text>
+            <Text style={styles.soldeAmount}>{solde !== null ? `${solde} F CFA` : '---'}</Text>
+          </>
+        )}
+      </View>
 
       <TextInput
         style={styles.input}
-        placeholder="Email ou numéro de téléphone du destinataire"
+        placeholder="Email ou téléphone du destinataire"
         value={recipient}
         onChangeText={setRecipient}
-        autoCapitalize="none" // Important pour la saisie d'e-mail
-        keyboardType={/^\d+$/.test(recipient) ? 'numeric' : 'default'} // Type de clavier dynamique
+        autoCapitalize="none"
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Montant"
+        placeholder="Montant à transférer"
         keyboardType="numeric"
         value={amount}
         onChangeText={setAmount}
@@ -93,9 +124,9 @@ const AdminScreen = () => {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: '#4B3FF1' }]}
           onPress={() => handleTransaction('credit')}
-          disabled={loading}
+          disabled={processing}
         >
-          {loading ? (
+          {processing ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.buttonText}>Créditer</Text>
@@ -105,69 +136,109 @@ const AdminScreen = () => {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: '#E53935' }]}
           onPress={() => handleTransaction('debit')}
-          disabled={loading}
+          disabled={processing}
         >
-          {loading ? (
+          {processing ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.buttonText}>Débiter</Text>
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Bouton Annuler */}
+      <TouchableOpacity
+        style={styles.cancelButton}
+        onPress={handleCancel}
+        disabled={processing}
+      >
+        <Text style={styles.cancelButtonText}>Annuler</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
+export default AdminScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    backgroundColor: '#f5f5f5', // Arrière-plan clair pour un meilleur contraste
+    padding: 24,
+    backgroundColor: '#f0f4f8',
   },
   title: {
-    fontSize: 26, // Titre légèrement plus grand
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 30, // Plus d'espace sous le titre
+    color: '#1e2a78',
+    marginBottom: 24,
     textAlign: 'center',
-    color: '#333',
+  },
+  soldeBox: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  soldeLabel: {
+    fontSize: 16,
+    color: '#888',
+  },
+  soldeAmount: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4B3FF1',
+    marginTop: 6,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd', // Couleur de bordure plus claire
-    padding: 12, // Plus de rembourrage
-    marginBottom: 20, // Plus d'espace entre les entrées
-    borderRadius: 10, // Coins plus arrondis
-    backgroundColor: '#fff', // Arrière-plan blanc pour les entrées
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
-    shadowColor: '#000', // Ombre subtile pour les entrées
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
   },
   buttonsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around', // Distribuer les boutons uniformément
-    marginTop: 10, // Espace au-dessus des boutons
+    justifyContent: 'space-between',
+    marginTop: 10,
   },
   button: {
     flex: 1,
-    padding: 16, // Plus de rembourrage pour les boutons
-    borderRadius: 12, // Boutons plus arrondis
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    marginHorizontal: 8, // Plus de marge entre les boutons
-    shadowColor: '#000', // Ombre pour les boutons
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    marginHorizontal: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
   },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 18, // Texte plus grand pour les boutons
+    fontSize: 16,
+  },
+  cancelButton: {
+    marginTop: 20,
+    backgroundColor: '#FFA726',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
-
-export default AdminScreen;

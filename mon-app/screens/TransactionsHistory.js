@@ -1,53 +1,58 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
-import IP_ADDRESS from './ipConfig'; // Assurez-vous que ipConfig.js fournit la bonne adresse IP
+import IP_ADDRESS from './ipConfig';
 
-const SuperAdminTransactionsScreen = () => {
-  const [transactions, setTransactions] = useState([]);
+const TransactionsHistory = () => {
+  const [lastTransaction, setLastTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    axios.get(`${IP_ADDRESS}/api/transactions`)
-      .then(response => {
-        setTransactions(response.data);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Erreur chargement transactions :', error);
-        setLoading(false);
-      });
-  }, []);
+ useEffect(() => {
+  axios.get(`${IP_ADDRESS}/api/transactions`)
+    .then(response => {
+      const sorted = response.data.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+      setTransactions(sorted);
+    })
+    .catch(error => console.error(error));
+}, []);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.item}>
-      <Text style={styles.id}>Transaction #{item.id}</Text>
-      <Text>Expéditeur : {item.sender_name || 'N/A'}</Text>
-      <Text>Bénéficiaire : {item.receiver_name || 'N/A'}</Text>
-      <Text>Montant : {item.amount} FCFA</Text>
-      <Text>Type : {item.transaction_type}</Text>
-      <Text>Statut : {item.status}</Text>
-      <Text>Date : {new Date(item.created_at).toLocaleString()}</Text>
-    </View>
-  );
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#003366" />;
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#003366" />
+        <Text>Chargement...</Text>
+      </View>
+    );
+  }
+
+  if (!lastTransaction) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.noTransaction}>Aucune transaction trouvée.</Text>
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Historique des Transactions</Text>
-      <FlatList
-        data={transactions}
-        keyExtractor={item => item.id.toString()}
-        renderItem={renderItem}
-      />
+      <Text style={styles.title}>Dernière Transaction</Text>
+      <View style={styles.item}>
+        <Text style={styles.id}>Transaction #{lastTransaction.id}</Text>
+        <Text>Expéditeur : {lastTransaction.sender_name || 'N/A'}</Text>
+        <Text>Bénéficiaire : {lastTransaction.receiver_name || 'N/A'}</Text>
+        <Text>Montant : {lastTransaction.amount} FCFA</Text>
+        <Text>Type : {lastTransaction.transaction_type}</Text>
+        <Text>Statut : {lastTransaction.status}</Text>
+        <Text>Date : {new Date(lastTransaction.created_at).toLocaleString()}</Text>
+      </View>
     </View>
   );
 };
 
-export default SuperAdminTransactionsScreen;
+export default TransactionsHistory;
 
 const styles = StyleSheet.create({
   container: {
@@ -55,22 +60,32 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f0f4f8',
   },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noTransaction: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 30,
+    color: '#666',
+  },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
-    color: '#003366'
+    color: '#003366',
   },
   item: {
     backgroundColor: '#e6f0ff',
     padding: 15,
-    marginBottom: 15,
     borderRadius: 10,
-    elevation: 2
+    elevation: 2,
   },
   id: {
     fontWeight: 'bold',
     marginBottom: 5,
-  }
+  },
 });
