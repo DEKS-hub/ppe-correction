@@ -17,6 +17,7 @@ import EditUserScreen from './mon-app/screens/EditUserScreen'; // Assurez-vous q
 import AddUserScreen from './mon-app/screens/AddUserScreen'; 
 import TransactionDetailScreen from './mon-app/screens/TransactionDetailScreen';
 import ProfileScreen from './mon-app/screens/ProfileScreen';
+import Contacts from './mon-app/screens/Contact';  // Assurez-vous que le chemin est correct
 
 // Assurez-vous que le chemin est correct
 
@@ -43,6 +44,7 @@ export default function App() {
         <Stack.Screen name="AddUserScreen" component={AddUserScreen} />
         <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Contacts" component={Contacts} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -391,7 +391,8 @@ const HomeScreen = () => {
   const [solde, setSolde] = useState(null);
   const [userId, setUserId] = useState(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [filterType, setFilterType] = useState('all'); 
+  const [filterType, setFilterType] = useState('recent'); 
+
 
 
 
@@ -542,7 +543,6 @@ const refreshAll = async () => {
       ...tx,
       type: tx.sender_id.toString() === userId ? 'transfer' : 'payment',
       amount: tx.sender_id.toString() === userId ? -tx.amount : tx.amount
-     // reference: tx.reference
     }));
     setTransactions(dataWithType);
 
@@ -552,11 +552,14 @@ const refreshAll = async () => {
   }
 };
 
-const filteredTransactions = transactions.filter(t => {
+const filteredTransactions = transactions.filter((t, index) => {
   if (filterType === 'all') return true;
-  if(filterType === 'sent') return t.type === 'transfer';
-  if(filterType === 'received') return t.type === 'payment';
+  if (filterType === 'recent') return index === 0; // 👈 Affiche la première transaction uniquement
+  if (filterType === 'sent') return t.type === 'transfer';
+  if (filterType === 'received') return t.type === 'payment';
 });
+
+
 
 
 
@@ -591,7 +594,7 @@ const filteredTransactions = transactions.filter(t => {
             <Text>Chargement du QR Code...</Text>
           ) : qrCodeError ? (
             <Text style={{ color: 'red' }}>{qrCodeError}</Text>
-          ) : (
+          ) : ( 
             <QRCode value={qrCode} size={160} />
           )}
         </View>
@@ -621,7 +624,17 @@ const filteredTransactions = transactions.filter(t => {
               <Ionicons name="qr-code-outline" size={24} color={COLORS.primary} />
             </View>
             <Text style={styles.menuText}>Scanner QR</Text>
+
+
         </TouchableOpacity>
+
+
+         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Contacts')}>
+    <View style={[styles.menuIconCircle, { backgroundColor: '#E0F7FA' }]}>
+      <Ionicons name="people-outline" size={24} color={COLORS.primary} />
+    </View>
+    <Text style={styles.menuText}>Contacts</Text>
+  </TouchableOpacity>
         </View>
         <TouchableOpacity
   style={{
@@ -647,6 +660,28 @@ const filteredTransactions = transactions.filter(t => {
     <TransactionItem key={t.id} t={t} userId={userId} navigation={navigation} />
   ))}
 </View>
+
+
+{filterType !== 'all' && (
+  <TouchableOpacity
+    onPress={() => setFilterType('all')}
+    style={{
+      marginHorizontal: 24,
+      marginBottom: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      backgroundColor: COLORS.primary,
+      borderRadius: 20,
+      alignSelf: 'flex-start',
+    }}
+  >
+    <Text style={{ color: 'white', fontWeight: 'bold' }}>
+      Afficher toutes les transactions
+    </Text>
+  </TouchableOpacity>
+)}
+
+
 
 
 {/* Modal du filtre */}
