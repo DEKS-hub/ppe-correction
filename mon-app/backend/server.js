@@ -30,7 +30,6 @@ app.get('/', (req, res) => {
   res.send({ status: "Started" });
 });
 
-
 // Enregistrement
 app.post("/register", async (req, res) => {
   const { name, email, mobile, password, user_type } = req.body;
@@ -80,7 +79,6 @@ app.post("/register", async (req, res) => {
     });
   }
 });
-
 
 // Connexion utilisateur
 app.post("/login-user", async (req, res) => {
@@ -186,6 +184,7 @@ app.get('/api/historique', async (req, res) => {
         t.amount,
         t.status,
         t.transaction_type,
+        t.reference, 
         t.created_at
       FROM transactions t
       LEFT JOIN users s ON t.sender_id = s.id
@@ -243,11 +242,8 @@ app.get('/api/solde/:userId', async (req, res) => {
   }
 });
 
-
-// Transaction entre utilisateurs
 app.post("/transaction", async (req, res) => {
   const { senderId, receiverPhone, amount } = req.body;
-  console.log("Données de transaction reçues :", req.body);
 
   if (!senderId || !receiverPhone || !amount || amount <= 0) {
     return res.status(400).json({ message: "Données invalides" });
@@ -258,45 +254,44 @@ app.post("/transaction", async (req, res) => {
     await conn.beginTransaction();
 
     const [[sender]] = await conn.query("SELECT solde FROM users WHERE id = ?", [senderId]);
-    if (!sender) {
-      throw new Error("Émetteur introuvable");
-    }
-    if (sender.solde < amount) {
-      throw new Error("Solde insuffisant");
-    }
+    if (!sender) throw new Error("Émetteur introuvable");
+    if (sender.solde < amount) throw new Error("Solde insuffisant");
 
     const [[receiver]] = await conn.query("SELECT id FROM users WHERE mobile = ?", [receiverPhone]);
-    if (!receiver) {
-      throw new Error("Destinataire introuvable");
-    }
+    if (!receiver) throw new Error("Destinataire introuvable");
 
     const [debitResult] = await conn.query(
       "UPDATE users SET solde = solde - ? WHERE id = ?",
       [amount, senderId]
     );
-    if (debitResult.affectedRows === 0) {
-      throw new Error("Échec du débit");
-    }
+    if (debitResult.affectedRows === 0) throw new Error("Échec du débit");
 
     const [creditResult] = await conn.query(
       "UPDATE users SET solde = solde + ? WHERE id = ?",
       [amount, receiver.id]
     );
-    if (creditResult.affectedRows === 0) {
-      throw new Error("Échec du crédit");
-    }
+    if (creditResult.affectedRows === 0) throw new Error("Échec du crédit");
 
-    await conn.query(
-    "INSERT INTO transactions (sender_id, receiver_id, amount) VALUES (?, ?, ?)",
-    [senderId, receiver.id, amount]
+    // 1. Insère transaction sans référence
+    const [insertResult] = await conn.query(
+      "INSERT INTO transactions (sender_id, receiver_id, amount) VALUES (?, ?, ?)",
+      [senderId, receiver.id, amount]
     );
 
+    const transactionId = insertResult.insertId;
+
+    // 2. Mets à jour la référence en concaténant id et created_at
+    await conn.query(
+      `UPDATE transactions 
+       SET reference = CONCAT('REF-', ?, '-', DATE_FORMAT(created_at, '%Y%m%d%H%i%s'))
+       WHERE id = ?`,
+      [transactionId, transactionId]
+    );
 
     await conn.commit();
-    res.status(200).json({ message: "Transaction réussie" });
+    res.status(200).json({ message: "Transaction réussie", reference: `REF-${transactionId}-<created_at>` });
 
   } catch (error) {
-    console.error("Erreur transaction :", error.message);
     await conn.rollback();
     res.status(500).json({ message: "Transaction annulée", erreur: error.message });
   } finally {
@@ -462,7 +457,8 @@ router.get('/api/transactions', async (req, res) => {
         status,
         transaction_type,
         type,
-        created_at
+        created_at,
+        reference
       FROM transactions
     `);
 
@@ -550,16 +546,16 @@ router.get('/api/user/:id', async (req, res) => {
 // Mettre à jour les infos utilisateur
 router.put('/api/user/:id', async (req, res) => {
   const userId = req.params.id;
-  const { nom, email, telephone } = req.body;
+  const { name, email, mobile } = req.body;
 
-  if (!nom || !email || !telephone) {
+  if (!name || !email || !mobile) {
     return res.status(400).json({ error: 'Champs obligatoires manquants' });
   }
 
   try {
     const [result] = await db.query(
       'UPDATE users SET name = ?, email = ?, mobile = ? WHERE id = ?',
-      [nom, email, telephone, userId]
+      [name, email, mobile, userId]
     );
 
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });

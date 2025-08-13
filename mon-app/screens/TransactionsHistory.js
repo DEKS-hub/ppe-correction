@@ -12,10 +12,8 @@ const SuperAdminTransactionsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTransactions, setFilteredTransactions] = useState([]);
 
-  // Cache pour éviter de refaire plusieurs fois la même requête pour un même id
   const userPhonesCache = {};
 
-  // Fonction pour récupérer le numéro via l'id (avec cache)
   const getUserPhoneById = async (id) => {
     if (!id) return null;
     if (userPhonesCache[id]) return userPhonesCache[id];
@@ -37,7 +35,6 @@ const SuperAdminTransactionsScreen = () => {
         const res = await axios.get(`${IP_ADDRESS}/api/transactions`);
         const data = res.data;
 
-        // Pour chaque transaction, récupérer les numéros
         const transactionsWithPhones = await Promise.all(
           data.map(async (t) => {
             const sender_phone = await getUserPhoneById(t.sender_id);
@@ -68,7 +65,8 @@ const SuperAdminTransactionsScreen = () => {
       (t.sender_name && t.sender_name.toLowerCase().includes(query)) ||
       (t.receiver_name && t.receiver_name.toLowerCase().includes(query)) ||
       (t.sender_phone && t.sender_phone.includes(query)) ||
-      (t.receiver_phone && t.receiver_phone.includes(query))
+      (t.receiver_phone && t.receiver_phone.includes(query)) ||
+      (t.reference && t.reference.toLowerCase().includes(query))  // Recherche sur reference aussi
     );
     setFilteredTransactions(results);
   };
@@ -76,12 +74,19 @@ const SuperAdminTransactionsScreen = () => {
   const renderItem = ({ item }) => (
     <View style={styles.item}>
       <Text style={styles.id}>Transaction #{item.id}</Text>
+
       <Text numberOfLines={1} ellipsizeMode="tail">
-        Expéditeur :  {item.sender_phone || 'N/A'}
+        Référence : {item.reference || 'N/A'}
       </Text>
+
+      <Text numberOfLines={1} ellipsizeMode="tail">
+        Expéditeur : {item.sender_phone || 'N/A'}
+      </Text>
+
       <Text numberOfLines={1} ellipsizeMode="tail">
         Bénéficiaire : {item.receiver_phone || 'N/A'}
       </Text>
+
       <Text>Montant : {item.amount} FCFA</Text>
       <Text>Type : {item.transaction_type}</Text>
       <Text>Statut : {item.status}</Text>
@@ -104,7 +109,7 @@ const SuperAdminTransactionsScreen = () => {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Rechercher par nom ou numéro"
+          placeholder="Rechercher par nom, numéro ou référence"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />

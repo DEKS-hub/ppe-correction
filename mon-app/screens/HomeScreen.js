@@ -542,6 +542,7 @@ const refreshAll = async () => {
       ...tx,
       type: tx.sender_id.toString() === userId ? 'transfer' : 'payment',
       amount: tx.sender_id.toString() === userId ? -tx.amount : tx.amount
+     // reference: tx.reference
     }));
     setTransactions(dataWithType);
 

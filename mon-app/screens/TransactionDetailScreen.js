@@ -61,6 +61,9 @@ const TransactionDetailScreen = () => {
           <Text style={styles.label}>ID:</Text>
           <Text style={styles.value}>{transaction.id}</Text>
 
+          <Text style={styles.label}>Référence:</Text>
+          <Text style={styles.value}>{transaction.reference || 'Non disponible'}</Text>
+
           <Text style={styles.label}>Type:</Text>
           <Text style={styles.value}>{transaction.type}</Text>
 

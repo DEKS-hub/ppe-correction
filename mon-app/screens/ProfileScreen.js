@@ -78,7 +78,7 @@ const ProfileScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="Nom complet"
-        value={userInfo?.nom || ''}
+        value={userInfo?.name || ''}
         onChangeText={(text) => setUserInfo({ ...userInfo, nom: text })}
       />
 
@@ -95,7 +95,7 @@ const ProfileScreen = () => {
         style={styles.input}
         placeholder="Téléphone"
         keyboardType="phone-pad"
-        value={userInfo?.telephone || ''}
+        value={userInfo?.mobile || ''}
         onChangeText={(text) => setUserInfo({ ...userInfo, telephone: text })}
       />
 
