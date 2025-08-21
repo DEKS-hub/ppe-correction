@@ -567,6 +567,58 @@ router.put('/api/user/:id', async (req, res) => {
   }
 });
 
+router.put("/:id/cancel", async (req, res) => {
+  const { id } = req.params;
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Vérifier si la transaction existe
+    const [rows] = await conn.query("SELECT * FROM transactions WHERE id = ?", [id]);
+    if (rows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ message: "Transaction introuvable" });
+    }
+
+    const transaction = rows[0];
+
+    // Vérifier si elle est déjà annulée
+    if (transaction.status === "Cancelled") {
+      await conn.rollback();
+      return res.status(400).json({ message: "Transaction déjà annulée" });
+    }
+
+    // Débiter le receveur
+    await conn.query(
+      "UPDATE users SET solde = solde - ? WHERE id = ?",
+      [transaction.amount, transaction.receiver_id]
+    );
+
+    // Créditer l'expéditeur
+    await conn.query(
+      "UPDATE users SET solde = solde + ? WHERE id = ?",
+      [transaction.amount, transaction.sender_id]
+    );
+
+    // Mettre à jour le statut
+    await conn.query("UPDATE transactions SET status = 'Cancelled' WHERE id = ?", [id]);
+
+    await conn.commit();
+    return res.json({ 
+      message: "Transaction annulée et remboursée ✅",
+      refundedAmount: transaction.amount
+    });
+
+  } catch (error) {
+    await conn.rollback();
+    console.error("Erreur annulation transaction :", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  } finally {
+    conn.release();
+  }
+});
+
+
 
 app.use(router);
 // Démarrage serveur

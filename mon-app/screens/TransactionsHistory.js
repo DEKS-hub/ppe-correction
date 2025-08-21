@@ -1,11 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import {
-  SafeAreaView, View, Text, StyleSheet, FlatList, ActivityIndicator, TextInput, TouchableOpacity
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import IP_ADDRESS from './ipConfig';
-
 const SuperAdminTransactionsScreen = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,30 +22,30 @@ const SuperAdminTransactionsScreen = () => {
   };
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const res = await axios.get(`${IP_ADDRESS}/api/transactions`);
-        const data = res.data;
-
-        const transactionsWithPhones = await Promise.all(
-          data.map(async (t) => {
-            const sender_phone = await getUserPhoneById(t.sender_id);
-            const receiver_phone = await getUserPhoneById(t.receiver_id);
-            return { ...t, sender_phone, receiver_phone };
-          })
-        );
-
-        setTransactions(transactionsWithPhones);
-        setFilteredTransactions(transactionsWithPhones);
-        setLoading(false);
-      } catch (error) {
-        console.error('Erreur chargement transactions :', error);
-        setLoading(false);
-      }
-    };
-
     fetchTransactions();
   }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const res = await axios.get(`${IP_ADDRESS}/api/transactions`);
+      const data = res.data;
+
+      const transactionsWithPhones = await Promise.all(
+        data.map(async (t) => {
+          const sender_phone = await getUserPhoneById(t.sender_id);
+          const receiver_phone = await getUserPhoneById(t.receiver_id);
+          return { ...t, sender_phone, receiver_phone };
+        })
+      );
+
+      setTransactions(transactionsWithPhones);
+      setFilteredTransactions(transactionsWithPhones);
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur chargement transactions :', error);
+      setLoading(false);
+    }
+  };
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
@@ -66,10 +58,25 @@ const SuperAdminTransactionsScreen = () => {
       (t.receiver_name && t.receiver_name.toLowerCase().includes(query)) ||
       (t.sender_phone && t.sender_phone.includes(query)) ||
       (t.receiver_phone && t.receiver_phone.includes(query)) ||
-      (t.reference && t.reference.toLowerCase().includes(query))  // Recherche sur reference aussi
+      (t.reference && t.reference.toLowerCase().includes(query))
     );
     setFilteredTransactions(results);
   };
+
+  // Fonction pour annuler une transaction
+
+const cancelTransaction = async (id) => {
+  try {
+    const res = await axios.put(`${IP_ADDRESS}/${id}/cancel`);
+    alert(res.data.message || "Transaction annulée avec succès ✅");
+    fetchTransactions(); // recharger la liste
+  } catch (error) {
+    console.error("Erreur annulation transaction :", error);
+    const msg = error.response?.data?.message || "Erreur lors de l’annulation ❌";
+    alert(msg);
+  }
+};
+
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>
@@ -91,6 +98,16 @@ const SuperAdminTransactionsScreen = () => {
       <Text>Type : {item.transaction_type}</Text>
       <Text>Statut : {item.status}</Text>
       <Text>Date : {new Date(item.created_at).toLocaleString()}</Text>
+
+      {/* Bouton annuler si la transaction est encore active */}
+      {item.status !== "Cancelled" && (
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => cancelTransaction(item.id)}
+        >
+          <Text style={styles.cancelText}>Annuler</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -158,4 +175,15 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   id: { fontWeight: 'bold', marginBottom: 5 },
+  cancelButton: {
+    marginTop: 10,
+    backgroundColor: '#cc0000',
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });
