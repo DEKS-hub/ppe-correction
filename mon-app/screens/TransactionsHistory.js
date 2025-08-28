@@ -1,32 +1,50 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert
+} from 'react-native';
+import axios from 'axios';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 const SuperAdminTransactionsScreen = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const userPhonesCache = {};
+  // Définir l'adresse IP (à remplacer par votre adresse réelle)
+  const IP_ADDRESS = 'http://votre-adresse-ip:3000';
 
-  const getUserPhoneById = async (id) => {
+  // Cache pour les numéros de téléphone
+  const userPhonesCache = useRef({});
+
+  const getUserPhoneById = useCallback(async (id) => {
     if (!id) return null;
-    if (userPhonesCache[id]) return userPhonesCache[id];
+    if (userPhonesCache.current[id]) return userPhonesCache.current[id];
 
     try {
       const res = await fetch(`${IP_ADDRESS}/users/${id}`);
       if (!res.ok) return null;
       const user = await res.json();
-      userPhonesCache[id] = user.mobile;
+      userPhonesCache.current[id] = user.mobile;
       return user.mobile;
-    } catch {
+    } catch (error) {
+      console.error('Erreur récupération utilisateur:', error);
       return null;
     }
-  };
-
-  useEffect(() => {
-    fetchTransactions();
   }, []);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
+      setRefreshing(true);
       const res = await axios.get(`${IP_ADDRESS}/api/transactions`);
       const data = res.data;
 
@@ -40,18 +58,25 @@ const SuperAdminTransactionsScreen = () => {
 
       setTransactions(transactionsWithPhones);
       setFilteredTransactions(transactionsWithPhones);
-      setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement transactions :', error);
+      console.error('Erreur chargement transactions:', error);
+      Alert.alert('Erreur', 'Impossible de charger les transactions');
+    } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [getUserPhoneById]);
 
-  const handleSearch = () => {
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredTransactions(transactions);
       return;
     }
+    
     const query = searchQuery.toLowerCase();
     const results = transactions.filter(t =>
       (t.sender_name && t.sender_name.toLowerCase().includes(query)) ||
@@ -61,46 +86,42 @@ const SuperAdminTransactionsScreen = () => {
       (t.reference && t.reference.toLowerCase().includes(query))
     );
     setFilteredTransactions(results);
+  }, [searchQuery, transactions]);
+
+  const cancelTransaction = async (id) => {
+    try {
+      const res = await axios.put(`${IP_ADDRESS}/api/transactions/${id}/cancel`);
+      Alert.alert('Succès', res.data.message || "Transaction annulée avec succès ✅");
+      fetchTransactions();
+    } catch (error) {
+      console.error("Erreur annulation transaction:", error);
+      const msg = error.response?.data?.message || "Erreur lors de l'annulation ❌";
+      Alert.alert('Erreur', msg);
+    }
   };
-
-  // Fonction pour annuler une transaction
-
-const cancelTransaction = async (id) => {
-  try {
-    const res = await axios.put(`${IP_ADDRESS}/${id}/cancel`);
-    alert(res.data.message || "Transaction annulée avec succès ✅");
-    fetchTransactions(); // recharger la liste
-  } catch (error) {
-    console.error("Erreur annulation transaction :", error);
-    const msg = error.response?.data?.message || "Erreur lors de l’annulation ❌";
-    alert(msg);
-  }
-};
-
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>
       <Text style={styles.id}>Transaction #{item.id}</Text>
-
+      
       <Text numberOfLines={1} ellipsizeMode="tail">
         Référence : {item.reference || 'N/A'}
       </Text>
 
       <Text numberOfLines={1} ellipsizeMode="tail">
-        Expéditeur : {item.sender_phone || 'N/A'}
+        Expéditeur : {item.sender_phone || item.sender_name || 'N/A'}
       </Text>
 
       <Text numberOfLines={1} ellipsizeMode="tail">
-        Bénéficiaire : {item.receiver_phone || 'N/A'}
+        Bénéficiaire : {item.receiver_phone || item.receiver_name || 'N/A'}
       </Text>
 
-      <Text>Montant : {item.amount} FCFA</Text>
-      <Text>Type : {item.transaction_type}</Text>
-      <Text>Statut : {item.status}</Text>
-      <Text>Date : {new Date(item.created_at).toLocaleString()}</Text>
+      <Text>Montant : {item.amount ? `${item.amount} FCFA` : 'N/A'}</Text>
+      <Text>Type : {item.transaction_type || 'N/A'}</Text>
+      <Text>Statut : {item.status || 'N/A'}</Text>
+      <Text>Date : {item.created_at ? new Date(item.created_at).toLocaleString() : 'N/A'}</Text>
 
-      {/* Bouton annuler si la transaction est encore active */}
-      {item.status !== "Cancelled" && (
+      {item.status !== "Cancelled" && item.status !== "cancelled" && (
         <TouchableOpacity
           style={styles.cancelButton}
           onPress={() => cancelTransaction(item.id)}
@@ -129,9 +150,11 @@ const cancelTransaction = async (id) => {
           placeholder="Rechercher par nom, numéro ou référence"
           value={searchQuery}
           onChangeText={setSearchQuery}
+          returnKeyType="search"
+          onSubmitEditing={handleSearch}
         />
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-          <Ionicons name="search" size={22} color="#fff" />
+        <TouchableOpacity style={styles.searchButton} onPress={() => setSearchQuery('')}>
+          <Ionicons name={searchQuery ? "close" : "search"} size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -139,30 +162,54 @@ const cancelTransaction = async (id) => {
         data={filteredTransactions}
         keyExtractor={item => item.id.toString()}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={fetchTransactions}
       />
     </SafeAreaView>
   );
 };
 
-export default SuperAdminTransactionsScreen;
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f4f8', paddingHorizontal: 16 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f4f8' },
-  title: { fontSize: 22, fontWeight: 'bold', marginVertical: 20, textAlign: 'center', color: '#003366' },
-  searchContainer: { flexDirection: 'row', marginBottom: 15 },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#f0f4f8', 
+    paddingHorizontal: 16 
+  },
+  loadingContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: '#f0f4f8' 
+  },
+  title: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    marginVertical: 20, 
+    textAlign: 'center', 
+    color: '#003366' 
+  },
+  searchContainer: { 
+    flexDirection: 'row', 
+    marginBottom: 15,
+    alignItems: 'center'
+  },
   input: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 8,
-    paddingHorizontal: 12, height: 40,
-    borderWidth: 1, borderColor: '#ccc',
+    flex: 1, 
+    backgroundColor: '#fff', 
+    borderRadius: 8,
+    paddingHorizontal: 12, 
+    height: 40,
+    borderWidth: 1, 
+    borderColor: '#ccc',
   },
   searchButton: {
     marginLeft: 8,
     backgroundColor: '#003366',
     borderRadius: 8,
-    paddingHorizontal: 12,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -172,9 +219,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 10,
     elevation: 2,
-    flexShrink: 1,
   },
-  id: { fontWeight: 'bold', marginBottom: 5 },
+  id: { 
+    fontWeight: 'bold', 
+    marginBottom: 5,
+    fontSize: 16
+  },
   cancelButton: {
     marginTop: 10,
     backgroundColor: '#cc0000',
@@ -186,4 +236,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  listContent: {
+    paddingBottom: 20
+  }
 });
+
+export default SuperAdminTransactionsScreen;
