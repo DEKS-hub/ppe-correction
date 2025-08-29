@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Alert
+  Alert,
+  RefreshControl
 } from 'react-native';
 import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import IP_ADDRESS from './ipConfig';
 
 const SuperAdminTransactionsScreen = () => {
   const [transactions, setTransactions] = useState([]);
@@ -19,10 +21,7 @@ const SuperAdminTransactionsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Définir l'adresse IP (à remplacer par votre adresse réelle)
-  const IP_ADDRESS = 'http://votre-adresse-ip:3000';
-
+  
   // Cache pour les numéros de téléphone
   const userPhonesCache = useRef({});
 
@@ -100,6 +99,17 @@ const SuperAdminTransactionsScreen = () => {
     }
   };
 
+  // Fonction handleSearch manquante - AJOUTÉE
+  const handleSearch = () => {
+    // La recherche est déjà gérée par le useEffect, cette fonction peut rester vide
+    // ou implémenter une logique de recherche spécifique
+  };
+
+  // Fonction pour effacer la recherche
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.item}>
       <Text style={styles.id}>Transaction #{item.id}</Text>
@@ -151,9 +161,9 @@ const SuperAdminTransactionsScreen = () => {
           value={searchQuery}
           onChangeText={setSearchQuery}
           returnKeyType="search"
-          onSubmitEditing={handleSearch}
+          onSubmitEditing={handleSearch} // Maintenant cette fonction existe
         />
-        <TouchableOpacity style={styles.searchButton} onPress={() => setSearchQuery('')}>
+        <TouchableOpacity style={styles.searchButton} onPress={clearSearch}>
           <Ionicons name={searchQuery ? "close" : "search"} size={22} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -164,8 +174,13 @@ const SuperAdminTransactionsScreen = () => {
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={fetchTransactions}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={fetchTransactions}
+            colors={['#003366']}
+          />
+        }
       />
     </SafeAreaView>
   );
